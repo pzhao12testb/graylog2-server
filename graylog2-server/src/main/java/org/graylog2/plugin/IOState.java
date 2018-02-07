@@ -17,6 +17,7 @@
 package org.graylog2.plugin;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
@@ -24,6 +25,7 @@ import org.graylog2.plugin.events.inputs.IOStateChangedEvent;
 import org.joda.time.DateTime;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @JsonAutoDetect
 public class IOState<T extends Stoppable> {

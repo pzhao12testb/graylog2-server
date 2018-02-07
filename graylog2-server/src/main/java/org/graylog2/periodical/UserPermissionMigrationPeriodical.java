@@ -100,7 +100,13 @@ public class UserPermissionMigrationPeriodical extends Periodical {
             }
             // filter out the individual permissions to dashboards and streams
             final List<String> dashboardStreamPermissions = Lists.newArrayList(
-                    Sets.filter(permissionSet, permission -> !basePermissions.contains(permission) && !"*".equals(permission)));
+                    Sets.filter(permissionSet,
+                                new Predicate<String>() {
+                                    @Override
+                                    public boolean apply(String permission) {
+                                        return !basePermissions.contains(permission) && !permission.equals("*");
+                                    }
+                                }));
             // add the minimal permission set back to the user
             fixedPermissions.addAll(permissions.userSelfEditPermissions(user.getName()));
             fixedPermissions.addAll(dashboardStreamPermissions);

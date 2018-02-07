@@ -1,14 +1,12 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import Reflux from 'reflux';
 
-import { DocumentTitle, PageHeader, Spinner } from 'components/common';
+import Spinner from 'components/common/Spinner';
+import PageHeader from 'components/common/PageHeader';
 import DocumentationLink from 'components/support/DocumentationLink';
 import EditExtractor from 'components/extractors/EditExtractor';
 
 import DocsHelper from 'util/DocsHelper';
-import StringUtils from 'util/StringUtils';
-import history from 'util/History';
 import Routes from 'routing/Routes';
 
 import StoreProvider from 'injection/StoreProvider';
@@ -25,6 +23,7 @@ const CreateExtractorsPage = React.createClass({
   propTypes: {
     params: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
   },
   mixins: [Reflux.connect(InputsStore)],
   getInitialState() {
@@ -43,7 +42,7 @@ const CreateExtractorsPage = React.createClass({
   componentDidMount() {
     InputsActions.get.triggerPromise(this.props.params.inputId);
     MessagesActions.loadMessage.triggerPromise(this.state.exampleIndex, this.state.exampleId)
-      .then(message => this.setState({ exampleMessage: message }));
+      .then(message => this.setState({exampleMessage: message}));
   },
   _isLoading() {
     return !(this.state.input && this.state.exampleMessage);
@@ -56,36 +55,32 @@ const CreateExtractorsPage = React.createClass({
       url = Routes.local_input_extractors(this.props.params.nodeId, this.props.params.inputId);
     }
 
-    history.push(url);
+    this.props.history.pushState(null, url);
   },
   render() {
     if (this._isLoading()) {
-      return <Spinner />;
+      return <Spinner/>;
     }
 
-    const exampleMessage = StringUtils.stringify(this.state.exampleMessage.fields[this.state.field]);
-
     return (
-      <DocumentTitle title={`New extractor for input ${this.state.input.title}`}>
-        <div>
-          <PageHeader title={<span>New extractor for input <em>{this.state.input.title}</em></span>}>
-            <span>
-              Extractors are applied on every message that is received by an input. Use them to extract and
-              transform any text data into fields that allow you easy filtering and analysis later on.
-            </span>
+      <div>
+        <PageHeader title={<span>New extractor for input <em>{this.state.input.title}</em></span>}>
+          <span>
+            Extractors are applied on every message that is received by an input. Use them to extract and transform{' '}
+            any text data into fields that allow you easy filtering and analysis later on.
+          </span>
 
-            <span>
-              Find more information about extractors in the
-              {' '}<DocumentationLink page={DocsHelper.PAGES.EXTRACTORS} text="documentation" />.
-            </span>
-          </PageHeader>
-          <EditExtractor action="create"
-                         extractor={this.state.extractor}
-                         inputId={this.state.input.id}
-                         exampleMessage={exampleMessage}
-                         onSave={this._extractorSaved} />
-        </div>
-      </DocumentTitle>
+          <span>
+            Find more information about extractors in the
+            {' '}<DocumentationLink page={DocsHelper.PAGES.EXTRACTORS} text="documentation"/>.
+          </span>
+        </PageHeader>
+        <EditExtractor action="create"
+                       extractor={this.state.extractor}
+                       inputId={this.state.input.id}
+                       exampleMessage={this.state.exampleMessage.fields[this.state.field]}
+                       onSave={this._extractorSaved}/>
+      </div>
     );
   },
 });

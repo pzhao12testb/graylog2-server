@@ -4,20 +4,11 @@ const PermissionsMixin = {
   },
 
   _permissionPredicate(permissionSet, p) {
-      if ((permissionSet.indexOf(p) > -1) || (permissionSet.indexOf('*') > -1)) {
-      return true;
+    if (p.split(':').length === 3) {
+      // eslint-disable-next-line prefer-template
+      return (permissionSet.indexOf(p) > -1) || (permissionSet.indexOf(p.split(':').slice(0, 2).join(':') + ':*') > -1);
     }
-
-    let permissionParts = p.split(':');
-    if (permissionParts.length >= 2) {
-      let first = permissionParts[0];
-      let second = permissionParts[0] + ':' + permissionParts[1];
-      return (permissionSet.indexOf(first) > -1)
-        || (permissionSet.indexOf(first + ':*') > -1)
-        || (permissionSet.indexOf(second) > -1)
-        || (permissionSet.indexOf(second + ':*') > -1);
-    }
-    return (permissionSet.indexOf(`${p}:*`) > -1);
+    return (permissionSet.indexOf(p) > -1) || (permissionSet.indexOf(`${p}:*`) > -1);
   },
 
   isPermitted(permissionSet, permissions) {
@@ -25,7 +16,7 @@ const PermissionsMixin = {
       return true;
     }
     if (permissions.every) {
-      return permissions.every(p => this._permissionPredicate(permissionSet, p));
+      return permissions.every((p) => this._permissionPredicate(permissionSet, p));
     }
     return this._permissionPredicate(permissionSet, permissions);
   },
@@ -34,7 +25,7 @@ const PermissionsMixin = {
     if (this._isWildCard(permissionSet)) {
       return true;
     }
-    return permissions.some(p => this._permissionPredicate(permissionSet, p));
+    return permissions.some((p) => this._permissionPredicate(permissionSet, p));
   },
 };
 

@@ -13,13 +13,13 @@ const UniversalSearchStore = Reflux.createStore({
   DEFAULT_LIMIT: 150,
   listenables: [],
 
-  search(type, query, timerange, streamId, limit, page, sortField, sortOrder, decorate) {
+  search(type, query, timerange, streamId, limit, page, sortField, sortOrder) {
     const timerangeParams = UniversalSearchStore.extractTimeRange(type, timerange);
     const effectiveLimit = limit || this.DEFAULT_LIMIT;
     const offset = (page - 1) * effectiveLimit;
 
     const url = URLUtils.qualifyUrl(ApiRoutes.UniversalSearchApiController.search(type, query,
-      timerangeParams, streamId, effectiveLimit, offset, sortField, sortOrder, decorate).url);
+      timerangeParams, streamId, effectiveLimit, offset, sortField, sortOrder).url);
 
     return fetch('GET', url).then((response) => {
       const result = jQuery.extend({}, response);
@@ -52,7 +52,7 @@ const UniversalSearchStore = Reflux.createStore({
 UniversalSearchStore.extractTimeRange = (type, timerange) => {
   // The server API uses the `range` parameter instead of `relative` for indicating a relative time range.
   if (type === 'relative') {
-    return { range: timerange.range || timerange.relative };
+    return {range: timerange.relative};
   }
 
   return timerange;

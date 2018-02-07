@@ -16,15 +16,20 @@
  */
 package org.graylog2.indexer.results;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.SearchHits;
 import org.graylog2.indexer.ranges.IndexRange;
 import org.graylog2.plugin.Message;
 
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author Lennart Koopmann <lennart@socketfeed.com>
+ */
 public class SearchResult extends IndexQueryResult {
 
 	private final long totalResults;
@@ -32,46 +37,53 @@ public class SearchResult extends IndexQueryResult {
 	private final Set<String> fields;
     private final Set<IndexRange> usedIndices;
 
-	public SearchResult(List<ResultMessage> hits, long totalResults, Set<IndexRange> usedIndices, String originalQuery, String builtQuery, long tookMs) {
-	    super(originalQuery, builtQuery, tookMs);
-	    this.results = hits;
-        this.fields = extractFields(hits);
-        this.totalResults = totalResults;
+	public SearchResult(SearchHits searchHits, Set<IndexRange> usedIndices, String originalQuery, BytesReference builtQuery, TimeValue took) {
+        super(originalQuery, builtQuery, took);
+
+		this.results = buildResults(searchHits);
+		this.fields = extractFields(results);
+		this.totalResults = searchHits.getTotalHits();
         this.usedIndices = usedIndices;
-    }
-
-    private SearchResult(String query, String originalQuery) {
-        super(query, originalQuery, 0);
-        this.results = Collections.emptyList();
-        this.fields = Collections.emptySet();
-        this.usedIndices = Collections.emptySet();
-        this.totalResults = 0;
-    }
-
-    public long getTotalResults() {
+	}
+	
+	public long getTotalResults() {
 		return totalResults;
 	}
-
+	
 	public List<ResultMessage> getResults() {
 		return results;
 	}
-
+	
 	public Set<String> getFields() {
 		return fields;
 	}
 
-	@VisibleForTesting
-    Set<String> extractFields(List<ResultMessage> hits) {
+    private Set<String> extractFields(List<ResultMessage> hits) {
         Set<String> filteredFields = Sets.newHashSet();
+        Set<String> allFields = Sets.newHashSet();
 
-        hits.forEach(hit -> {
-            final Message message = hit.getMessage();
+        Iterator<ResultMessage> i = hits.iterator();
+        while(i.hasNext()) {
+            final Message message = i.next().getMessage();
+            allFields.addAll(message.getFieldNames());
+
             for (String field : message.getFieldNames()) {
-                if (!Message.FILTERED_FIELDS.contains(field)) {
+                if (!Message.RESERVED_FIELDS.contains(field)) {
                     filteredFields.add(field);
                 }
             }
-        });
+        }
+
+        // Because some fields actually make sense in this result and some don't.
+        // TODO: This is super awkward. First we do not include RESERVED_FIELDS, then we add some back...
+        if (allFields.contains("message")) {
+            filteredFields.add("message");
+        }
+        if (allFields.contains("source")) {
+            filteredFields.add("source");
+        }
+        filteredFields.remove("streams");
+        filteredFields.remove("full_message");
 
         return filteredFields;
     }
@@ -80,7 +92,4 @@ public class SearchResult extends IndexQueryResult {
         return usedIndices;
     }
 
-    public static SearchResult empty(String query, String originalQuery) {
-        return new SearchResult(query, originalQuery);
-    }
 }

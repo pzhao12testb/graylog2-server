@@ -22,7 +22,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
-import org.graylog2.audit.jersey.NoAuditEvent;
 import org.graylog2.events.ClusterEventBus;
 import org.graylog2.plugin.system.NodeId;
 import org.graylog2.shared.rest.resources.RestResource;
@@ -64,7 +63,6 @@ public class DebugEventsResource extends RestResource {
     @Path("/cluster")
     @Consumes(MediaType.TEXT_PLAIN)
     @ApiOperation(value = "Create and send a cluster debug event.")
-    @NoAuditEvent("only used to create a debug event")
     public void generateClusterDebugEvent(@ApiParam(name = "text", defaultValue = "Cluster Test") @Nullable String text) {
         clusterEventBus.post(DebugEvent.create(nodeId.toString(), isNullOrEmpty(text) ? "Cluster Test" : text));
     }
@@ -74,7 +72,6 @@ public class DebugEventsResource extends RestResource {
     @Path("/local")
     @Consumes(MediaType.TEXT_PLAIN)
     @ApiOperation(value = "Create and send a local debug event.")
-    @NoAuditEvent("only used to create a debug event")
     public void generateDebugEvent(@ApiParam(name = "text", defaultValue = "Local Test") @Nullable String text) {
         serverEventBus.post(DebugEvent.create(nodeId.toString(), isNullOrEmpty(text) ? "Local Test" : text));
     }

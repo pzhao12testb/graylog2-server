@@ -1,1 +1,1 @@
-export { default as TimesList } from './TimesList';
+export TimesList from './TimesList';

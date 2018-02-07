@@ -21,7 +21,6 @@ import com.lordofthejars.nosqlunit.core.LoadStrategyEnum;
 import com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb;
 import org.graylog2.database.MongoConnectionRule;
 import org.joda.time.DateTime;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -30,10 +29,8 @@ import org.junit.Test;
 import java.util.List;
 
 import static com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb.InMemoryMongoRuleBuilder.newInMemoryMongoDbRule;
+import static org.junit.Assert.*;
 import static org.assertj.jodatime.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class AccessTokenServiceImplTest {
     @ClassRule
@@ -47,11 +44,6 @@ public class AccessTokenServiceImplTest {
     @Before
     public void setupService () {
         this.accessTokenService = new AccessTokenServiceImpl(mongoRule.getMongoConnection());
-    }
-
-    @After
-    public void tearDown() {
-        mongoRule.getMongoConnection().getMongoDatabase().drop();
     }
 
     @Test

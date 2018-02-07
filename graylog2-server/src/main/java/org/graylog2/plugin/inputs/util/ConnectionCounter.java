@@ -16,30 +16,37 @@
  */
 package org.graylog2.plugin.inputs.util;
 
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import com.codahale.metrics.Gauge;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.SimpleChannelHandler;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
-@ChannelHandler.Sharable
-public class ConnectionCounter extends ChannelInboundHandlerAdapter {
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
+public class ConnectionCounter extends SimpleChannelHandler {
+
     private final AtomicInteger connections;
-    private final AtomicLong totalConnections;
+    private long totalConnections;
 
-    public ConnectionCounter(AtomicInteger connections, AtomicLong totalConnections) {
-        this.connections = connections;
-        this.totalConnections = totalConnections;
+    public ConnectionCounter() {
+        connections = new AtomicInteger();
+        totalConnections = 0;
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         connections.incrementAndGet();
-        totalConnections.incrementAndGet();
-        ctx.channel().closeFuture().addListener(f -> connections.decrementAndGet());
+        totalConnections++;
+        super.channelConnected(ctx, e);
+    }
 
-        super.channelActive(ctx);
+    @Override
+    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        connections.decrementAndGet();
+        super.channelDisconnected(ctx, e);
     }
 
     public int getConnectionCount() {
@@ -47,6 +54,25 @@ public class ConnectionCounter extends ChannelInboundHandlerAdapter {
     }
 
     public long getTotalConnections() {
-        return totalConnections.get();
+        return totalConnections;
     }
+
+    public Gauge<Integer> gaugeCurrent() {
+        return new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+                return getConnectionCount();
+            }
+        };
+    }
+
+    public Gauge<Long> gaugeTotal() {
+        return new Gauge<Long>() {
+            @Override
+            public Long getValue() {
+                return getTotalConnections();
+            }
+        };
+    }
+
 }

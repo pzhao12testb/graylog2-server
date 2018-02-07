@@ -16,17 +16,14 @@
  */
 package org.graylog2.security.realm;
 
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAccount;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authc.credential.AllowAllCredentialsMatcher;
 import org.apache.shiro.realm.AuthenticatingRealm;
 import org.graylog2.plugin.database.ValidationException;
-import org.graylog2.plugin.database.users.User;
 import org.graylog2.security.AccessToken;
-import org.graylog2.security.AccessTokenService;
 import org.graylog2.shared.security.AccessTokenAuthToken;
+import org.graylog2.security.AccessTokenService;
+import org.graylog2.plugin.database.users.User;
 import org.graylog2.shared.security.ShiroSecurityContext;
 import org.graylog2.shared.users.UserService;
 import org.slf4j.Logger;
@@ -40,12 +37,15 @@ public class AccessTokenAuthenticator extends AuthenticatingRealm {
 
     private final AccessTokenService accessTokenService;
     private final UserService userService;
+    private final LdapUserAuthenticator ldapAuthenticator;
 
     @Inject
     AccessTokenAuthenticator(AccessTokenService accessTokenService,
-                             UserService userService) {
+                             UserService userService,
+                             LdapUserAuthenticator ldapAuthenticator) {
         this.accessTokenService = accessTokenService;
         this.userService = userService;
+        this.ldapAuthenticator = ldapAuthenticator;
         setAuthenticationTokenClass(AccessTokenAuthToken.class);
         setCachingEnabled(false);
         // the presence of a valid access token is enough, we don't have any other credentials
@@ -63,6 +63,9 @@ public class AccessTokenAuthenticator extends AuthenticatingRealm {
         final User user = userService.load(accessToken.getUserName());
         if (user == null) {
             return null;
+        }
+        if (user.isExternalUser() && !ldapAuthenticator.isEnabled()) {
+            throw new LockedAccountException("LDAP authentication is currently disabled.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Found user {} for access token.", user);

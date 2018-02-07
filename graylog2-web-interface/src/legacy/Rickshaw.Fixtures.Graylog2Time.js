@@ -4,124 +4,126 @@ import graphHelper from 'legacy/graphHelper';
 
 Rickshaw.namespace('Rickshaw.Fixtures.Graylog2Time');
 
-const Graylog2Time = function () {
-  const self = this;
+const Graylog2Time = function() {
 
-  this.months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	var self = this;
 
-  this.units = [
-    {
-      name: 'decade',
-      seconds: 86400 * 365.25 * 10,
-      formatter(d) { return self.formatDate(d); },
-    }, {
-      name: 'year',
-      seconds: 86400 * 365.25,
-      formatter(d) { return self.formatDate(d); },
-    }, {
-      name: 'month',
-      seconds: 86400 * 30.5,
-      formatter(d) { return self.formatDate(d); },
-    }, {
-      name: 'week',
-      seconds: 86400 * 7,
-      formatter(d) { return self.formatDate(d); },
-    }, {
-      name: 'day',
-      seconds: 86400,
-      formatter(d) { return self.formatDate(d); },
-    }, {
-      name: '3 hours',
-      seconds: 3600 * 3,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: 'hour',
-      seconds: 3600,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: '15 minutes',
-      seconds: 60 * 15,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: '5 minutes',
-      seconds: 60 * 5,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: 'minute',
-      seconds: 60,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: '15 second',
-      seconds: 15,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: 'second',
-      seconds: 1,
-      formatter(d) { return self.formatDateTime(d); },
-    }, {
-      name: 'millisecond',
-      seconds: 1 / 1000,
-      formatter(d) { return self.formatDateTime(d); },
-    },
-  ];
+	this.months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  this.unit = function (unitName) {
-    return this.units.filter((unit) => { return unitName == unit.name; }).shift();
-  };
+	this.units = [
+		{
+			name: 'decade',
+			seconds: 86400 * 365.25 * 10,
+			formatter: function(d) { return self.formatDate(d) }
+		}, {
+			name: 'year',
+			seconds: 86400 * 365.25,
+			formatter: function(d) { return self.formatDate(d) }
+		}, {
+			name: 'month',
+			seconds: 86400 * 30.5,
+			formatter: function(d) { return self.formatDate(d) }
+		}, {
+			name: 'week',
+			seconds: 86400 * 7,
+			formatter: function(d) { return self.formatDate(d) }
+		}, {
+			name: 'day',
+			seconds: 86400,
+			formatter: function(d) { return self.formatDate(d) }
+		}, {
+			name: '3 hours',
+			seconds: 3600 * 3,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: 'hour',
+			seconds: 3600,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: '15 minutes',
+			seconds: 60 * 15,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: '5 minutes',
+			seconds: 60 * 5,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: 'minute',
+			seconds: 60,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: '15 second',
+			seconds: 15,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: 'second',
+			seconds: 1,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}, {
+			name: 'millisecond',
+			seconds: 1/1000,
+			formatter: function(d) { return self.formatDateTime(d) }
+		}
+	];
 
-  this.formatDateTime = graphHelper.customDateTimeFormat();
+	this.unit = function(unitName) {
+		return this.units.filter( function(unit) { return unitName == unit.name } ).shift();
+	};
+
+	this.formatDateTime = graphHelper.customDateTimeFormat();
 
 	// Data in histograms is calculated using UTC. When the histogram resolution is day or lower,
 	// we can't extrapolate the data to the user's local time, so we use UTC instead.
-  this.formatDate = graphHelper.customDateTimeFormat(0);
+	this.formatDate = graphHelper.customDateTimeFormat(0);
 
-  this.ceil = function (time, unit) {
-    let date,
-      floor,
-      year;
+	this.ceil = function(time, unit) {
 
-    if (unit.name == 'week') {
-      const momentDate = moment.utc(time * 1000);
-      momentDate.startOf('isoWeek');
+		var date, floor, year;
 
-      if (momentDate.unix() == time) return time;
+		if (unit.name == 'week') {
+			var momentDate = moment.utc(time * 1000);
+			momentDate.startOf('isoWeek');
 
-      momentDate.add(1, 'week');
-      return momentDate.unix();
-    }
+			if (momentDate.unix() == time) return time;
 
-    if (unit.name == 'month') {
-      date = new Date(time * 1000);
+			momentDate.add(1, 'week');
+			return momentDate.unix();
+		}
 
-      floor = Date.UTC(date.getUTCFullYear(), date.getUTCMonth()) / 1000;
-      if (floor == time) return time;
+		if (unit.name == 'month') {
 
-      year = date.getUTCFullYear();
-      let month = date.getUTCMonth();
+			date = new Date(time * 1000);
 
-      if (month == 11) {
-        month = 0;
-        year += 1;
-      } else {
-        month += 1;
-      }
+			floor = Date.UTC(date.getUTCFullYear(), date.getUTCMonth()) / 1000;
+			if (floor == time) return time;
 
-      return Date.UTC(year, month) / 1000;
-    }
+			year = date.getUTCFullYear();
+			var month = date.getUTCMonth();
 
-    if (unit.name == 'year') {
-      date = new Date(time * 1000);
+			if (month == 11) {
+				month = 0;
+				year = year + 1;
+			} else {
+				month += 1;
+			}
 
-      floor = Date.UTC(date.getUTCFullYear(), 0) / 1000;
-      if (floor == time) return time;
+			return Date.UTC(year, month) / 1000;
+		}
 
-      year = date.getUTCFullYear() + 1;
+		if (unit.name == 'year') {
 
-      return Date.UTC(year, 0) / 1000;
-    }
+			date = new Date(time * 1000);
 
-    return Math.ceil(time / unit.seconds) * unit.seconds;
-  };
+			floor = Date.UTC(date.getUTCFullYear(), 0) / 1000;
+			if (floor == time) return time;
+
+			year = date.getUTCFullYear() + 1;
+
+			return Date.UTC(year, 0) / 1000;
+		}
+
+		return Math.ceil(time / unit.seconds) * unit.seconds;
+	};
 };
 
 Rickshaw.Fixtures.Graylog2Time = Graylog2Time;

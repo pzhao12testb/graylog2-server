@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -46,7 +45,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
 
 import static javax.ws.rs.core.Response.Status.BAD_GATEWAY;
 
@@ -60,9 +58,8 @@ public class ClusterJournalResource extends ProxiedResource {
     @Inject
     public ClusterJournalResource(NodeService nodeService,
                                   RemoteInterfaceProvider remoteInterfaceProvider,
-                                  @Context HttpHeaders httpHeaders,
-                                  @Named("proxiedRequestsExecutorService") ExecutorService executorService) throws NodeNotFoundException {
-        super(httpHeaders, nodeService, remoteInterfaceProvider, executorService);
+                                  @Context HttpHeaders httpHeaders) throws NodeNotFoundException {
+        super(httpHeaders, nodeService, remoteInterfaceProvider);
     }
 
     @GET

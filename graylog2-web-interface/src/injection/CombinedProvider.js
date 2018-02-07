@@ -1,28 +1,23 @@
 class CombinedProvider {
   constructor() {
-    /* eslint-disable import/no-require, global-require */
+    /* eslint-disable import/no-require */
     this.actions = {
-      AlarmCallbackHistory: () => require('actions/alarmcallbacks/AlarmCallbackHistoryActions'),
       AlarmCallbacks: () => require('actions/alarmcallbacks/AlarmCallbacksActions'),
       AlertConditions: () => require('actions/alertconditions/AlertConditionsActions'),
-      AlertNotifications: () => require('actions/alertnotifications/AlertNotificationsActions'),
+      AlertReceivers: () => require('actions/alertreceivers/AlertReceiversActions'),
       Alerts: () => require('actions/alerts/AlertsActions'),
-      Authentication: () => require('actions/authentication/AuthenticationActions'),
-      ClusterTraffic: () => require('actions/cluster/ClusterTrafficActions'),
       CodecTypes: () => require('actions/codecs/CodecTypesActions'),
+      Authentication: () => require('actions/authentication/AuthenticationActions'),
       Configuration: () => require('actions/configurations/ConfigurationActions'),
       ConfigurationBundles: () => require('actions/configuration-bundles/ConfigurationBundlesActions'),
-      Dashboards: () => require('actions/dashboards/DashboardsActions'),
       Decorators: () => require('actions/decorators/DecoratorsActions'),
       Deflector: () => require('actions/indices/DeflectorActions'),
       Extractors: () => require('actions/extractors/ExtractorsActions'),
-      FieldQuickValues: () => require('actions/field-analyzers/FieldQuickValuesActions'),
       GettingStarted: () => require('actions/gettingstarted/GettingStartedActions'),
       HistogramData: () => require('actions/sources/HistogramDataActions'),
       IndexerCluster: () => require('actions/indexers/IndexerClusterActions'),
       IndexerOverview: () => require('actions/indexers/IndexerOverviewActions'),
       IndexRanges: () => require('actions/indices/IndexRangesActions'),
-      IndexSets: () => require('actions/indices/IndexSetsActions'),
       Indices: () => require('actions/indices/IndicesActions'),
       IndicesConfiguration: () => require('actions/indices/IndicesConfigurationActions'),
       Inputs: () => require('actions/inputs/InputsActions'),
@@ -30,9 +25,6 @@ class CombinedProvider {
       Ldap: () => require('actions/ldap/LdapActions'),
       LdapGroups: () => require('actions/ldap/LdapGroupsActions'),
       Loggers: () => require('actions/system/LoggersActions'),
-      LookupTableCaches: () => require('actions/lookup-tables/LookupTableCachesActions'),
-      LookupTableDataAdapters: () => require('actions/lookup-tables/LookupTableDataAdaptersActions'),
-      LookupTables: () => require('actions/lookup-tables/LookupTablesActions'),
       MessageCounts: () => require('actions/messages/MessageCountsActions'),
       Messages: () => require('actions/messages/MessagesActions'),
       Metrics: () => require('actions/metrics/MetricsActions'),
@@ -51,11 +43,9 @@ class CombinedProvider {
       AlarmCallbackHistory: () => require('stores/alarmcallbacks/AlarmCallbackHistoryStore'),
       AlarmCallbacks: () => require('stores/alarmcallbacks/AlarmCallbacksStore'),
       AlertConditions: () => require('stores/alertconditions/AlertConditionsStore'),
-      AlertNotifications: () => require('stores/alertnotifications/AlertNotificationsStore'),
       Alerts: () => require('stores/alerts/AlertsStore'),
       Authentication: () => require('stores/authentication/AuthenticationStore'),
       ClusterOverview: () => require('stores/cluster/ClusterOverviewStore'),
-      ClusterTraffic: () => require('stores/cluster/ClusterTrafficStore'),
       CodecTypes: () => require('stores/codecs/CodecTypesStore'),
       ConfigurationBundles: () => require('stores/configuration-bundles/ConfigurationBundlesStore'),
       Configurations: () => require('stores/configurations/ConfigurationsStore'),
@@ -77,7 +67,6 @@ class CombinedProvider {
       IndexerFailures: () => require('stores/indexers/IndexerFailuresStore'),
       IndexerOverview: () => require('stores/indexers/IndexerOverviewStore'),
       IndexRanges: () => require('stores/indices/IndexRangesStore'),
-      IndexSets: () => require('stores/indices/IndexSetsStore'),
       Indices: () => require('stores/indices/IndicesStore'),
       IndicesConfiguration: () => require('stores/indices/IndicesConfigurationStore'),
       Inputs: () => require('stores/inputs/InputsStore'),
@@ -88,9 +77,6 @@ class CombinedProvider {
       LdapGroups: () => require('stores/ldap/LdapGroupsStore'),
       Ldap: () => require('stores/ldap/LdapStore'),
       Loggers: () => require('stores/system/LoggersStore'),
-      LookupTables: () => require('stores/lookup-tables/LookupTablesStore'),
-      LookupTableCaches: () => require('stores/lookup-tables/LookupTableCachesStore'),
-      LookupTableDataAdapters: () => require('stores/lookup-tables/LookupTableDataAdaptersStore'),
       MessageCounts: () => require('stores/messages/MessageCountsStore'),
       MessageFields: () => require('stores/messages/MessageFieldsStore'),
       Messages: () => require('stores/messages/MessagesStore'),
@@ -119,10 +105,11 @@ class CombinedProvider {
       SystemShutdown: () => require('stores/system-shutdown/SystemShutdownStore'),
       Tools: () => require('stores/tools/ToolsStore'),
       UniversalSearch: () => require('stores/search/UniversalSearchStore'),
+      UsageStatsOptOut: () => require('stores/usagestats/UsageStatsOptOutStore'),
       Users: () => require('stores/users/UsersStore'),
       Widgets: () => require('stores/widgets/WidgetsStore'),
     };
-    /* eslint-enable import/no-require, global-require */
+    /* eslint-enable import/no-require */
   }
 
   get(name) {

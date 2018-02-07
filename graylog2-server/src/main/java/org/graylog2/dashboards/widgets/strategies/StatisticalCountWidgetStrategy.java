@@ -19,7 +19,6 @@ package org.graylog2.dashboards.widgets.strategies;
 import com.google.common.collect.Maps;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import org.graylog2.indexer.FieldTypeException;
 import org.graylog2.indexer.results.FieldStatsResult;
 import org.graylog2.indexer.searches.Searches;
 import org.graylog2.plugin.dashboards.widgets.ComputationResult;
@@ -86,11 +85,14 @@ public class StatisticalCountWidgetStrategy extends SearchResultCountWidgetStrat
                                           @Assisted Map<String, Object> config,
                                           @Assisted TimeRange timeRange,
                                           @Assisted String widgetId) {
-        super(searches, config, timeRange, widgetId);
+        super(searches,
+                config,
+                timeRange,
+                widgetId);
         this.field = (String) config.get("field");
         String statsFunction = (String) config.get("stats_function");
         // We accidentally modified the standard deviation function name, we need this to make old widgets work again
-        this.statsFunction = ("stddev".equals(statsFunction)) ? StatisticalFunction.STANDARD_DEVIATION : StatisticalFunction.fromString(statsFunction);
+        this.statsFunction = (statsFunction.equals("stddev")) ? StatisticalFunction.STANDARD_DEVIATION : StatisticalFunction.fromString(statsFunction);
         this.streamId = (String) config.get("stream_id");
     }
 
@@ -157,13 +159,13 @@ public class StatisticalCountWidgetStrategy extends SearchResultCountWidgetStrat
                 Map<String, Object> results = Maps.newHashMap();
                 results.put("now", getStatisticalValue(fieldStatsResult));
                 results.put("previous", getStatisticalValue(previousFieldStatsResult));
-                long tookMs = fieldStatsResult.tookMs() + previousFieldStatsResult.tookMs();
+                long tookMs = fieldStatsResult.took().millis() + previousFieldStatsResult.took().millis();
 
                 return new ComputationResult(results, tookMs);
             } else {
-                return new ComputationResult(getStatisticalValue(fieldStatsResult), fieldStatsResult.tookMs());
+                return new ComputationResult(getStatisticalValue(fieldStatsResult), fieldStatsResult.took().millis());
             }
-        } catch (FieldTypeException e) {
+        } catch (Searches.FieldTypeException e) {
             log.warn("Invalid field provided, returning 'NaN'", e);
             return new ComputationResult(Double.NaN, 0);
         }

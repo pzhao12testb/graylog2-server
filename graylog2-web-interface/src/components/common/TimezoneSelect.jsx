@@ -1,28 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import moment from 'moment-timezone';
-import lodash from 'lodash';
+import moment from 'moment';
+import jQuery from 'jquery';
 
 import Select from 'components/common/Select';
 
-/**
- * Component that renders a select input for all supported time zones.
- *
- * As this component is based in the `Select` component, users can search a
- * certain time zone easily. This component will pass through other props
- * to the underlying `Select` component, so you can further customize how
- * the `Select` input behaves. Check the `Select` documentation for more
- * information.
- */
 const TimezoneSelect = React.createClass({
   propTypes: {
-    /**
-     * Function that will be called when the selected timezone changes. The
-     * function will receive the new time zone identifier as argument. See
-     * https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for
-     * a list of time zone identifiers.
-     */
-    onChange: PropTypes.func,
+    onChange: React.PropTypes.func,
   },
 
   getValue() {
@@ -35,7 +19,6 @@ const TimezoneSelect = React.createClass({
 
   _formatTimezones() {
     const timezones = {};
-    // Group time zones by area
     moment.tz.names().forEach((timezone) => {
       const splitted = timezone.split('/');
       const area = (splitted.length > 1 ? splitted[0] : this._UNCLASSIFIED_AREA);
@@ -48,24 +31,16 @@ const TimezoneSelect = React.createClass({
       timezones[area].push(location);
     });
 
-    const labels = [];
-
-    Object.keys(timezones)
-      .sort()
-      .forEach((area) => {
-        // Add disabled area option to use as TZ separator
-        labels.push({ label: area, disabled: true, value: area });
-
-        // Now add a label per timezone in the area
-        const effectiveTimezones = lodash.uniq(timezones[area]).sort();
-        const timezoneLabels = effectiveTimezones.map((location) => {
-          const timezone = (area === this._UNCLASSIFIED_AREA ? location : `${area}/${location}`);
-          return { value: timezone, label: location.replace('_', ' ') };
-        });
-        labels.push(...timezoneLabels);
-      });
-
-    return labels;
+    return [].concat.apply([], Object.keys(timezones).sort().map((area) => {
+      return [{ label: area, disabled: true, value: area }]
+        .concat(jQuery.unique(timezones[area])
+          .sort()
+          .map((location) => {
+            const timezone = (area === this._UNCLASSIFIED_AREA ? location : `${area}/${location}`);
+            return { value: timezone, label: location.replace('_', ' ') };
+          })
+        );
+    }));
   },
   _renderOption(option) {
     if (!option.disabled) {
@@ -75,11 +50,8 @@ const TimezoneSelect = React.createClass({
   },
   render() {
     const timezones = this._formatTimezones();
-    const { onChange, ...otherProps } = this.props;
-
     return (
-      <Select ref="timezone" {...otherProps}
-              onChange={onChange}
+      <Select ref="timezone" {...this.props}
               placeholder="Pick a time zone"
               options={timezones}
               optionRenderer={this._renderOption} />

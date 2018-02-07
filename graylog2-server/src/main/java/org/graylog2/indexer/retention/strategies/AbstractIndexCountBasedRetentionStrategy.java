@@ -17,7 +17,10 @@
 
 package org.graylog2.indexer.retention.strategies;
 
-import org.graylog2.indexer.IndexSet;
+import com.google.common.collect.ImmutableMap;
+import org.graylog2.auditlog.AuditLogger;
+import org.graylog2.indexer.Deflector;
+import org.graylog2.indexer.IndexHelper;
 import org.graylog2.indexer.indices.Indices;
 import org.graylog2.periodical.IndexRetentionThread;
 import org.graylog2.plugin.indexer.retention.RetentionStrategy;
@@ -26,40 +29,36 @@ import org.graylog2.shared.system.activities.ActivityWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractIndexCountBasedRetentionStrategy implements RetentionStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractIndexCountBasedRetentionStrategy.class);
 
+    private final Deflector deflector;
     private final Indices indices;
     private final ActivityWriter activityWriter;
+    private final AuditLogger auditLogger;
 
-    public AbstractIndexCountBasedRetentionStrategy(Indices indices,
-                                                    ActivityWriter activityWriter) {
+    public AbstractIndexCountBasedRetentionStrategy(Deflector deflector, Indices indices,
+                                                    ActivityWriter activityWriter, AuditLogger auditLogger) {
+        this.deflector = requireNonNull(deflector);
         this.indices = requireNonNull(indices);
         this.activityWriter = requireNonNull(activityWriter);
+        this.auditLogger = requireNonNull(auditLogger);
     }
 
-    protected abstract Optional<Integer> getMaxNumberOfIndices(IndexSet indexSet);
-    protected abstract void retain(String indexName, IndexSet indexSet);
+    protected abstract Optional<Integer> getMaxNumberOfIndices();
+    protected abstract void retain(String indexName);
 
     @Override
-    public void retain(IndexSet indexSet) {
-        final Map<String, Set<String>> deflectorIndices = indexSet.getAllIndexAliases();
-        final int indexCount = (int)deflectorIndices.keySet()
-            .stream()
-            .filter(indexName -> !indices.isReopened(indexName))
-            .count();
-
-        final Optional<Integer> maxIndices = getMaxNumberOfIndices(indexSet);
+    public void retain() {
+        final Map<String, Set<String>> deflectorIndices = deflector.getAllGraylogDeflectorIndices();
+        final int indexCount = deflectorIndices.size();
+        final Optional<Integer> maxIndices = getMaxNumberOfIndices();
 
         if (!maxIndices.isPresent()) {
             LOG.warn("No retention strategy configuration found, not running index retention!");
@@ -80,26 +79,41 @@ public abstract class AbstractIndexCountBasedRetentionStrategy implements Retent
         LOG.info(msg);
         activityWriter.write(new Activity(msg, IndexRetentionThread.class));
 
-        runRetention(indexSet, deflectorIndices, removeCount);
+        final ImmutableMap<String, Object> auditLogContext = ImmutableMap.of("retention_strategy", this.getClass().getCanonicalName());
+        auditLogger.success("<system>", "initiated", "index retention", auditLogContext);
+
+        runRetention(deflectorIndices, removeCount);
     }
 
-    private void runRetention(IndexSet indexSet, Map<String, Set<String>> deflectorIndices, int removeCount) {
-        final Set<String> orderedIndices = Arrays.stream(indexSet.getManagedIndices())
-            .filter(indexName -> !indices.isReopened(indexName))
-            .filter(indexName -> !(deflectorIndices.getOrDefault(indexName, Collections.emptySet()).contains(indexSet.getWriteIndexAlias())))
-            .sorted((indexName1, indexName2) -> indexSet.extractIndexNumber(indexName2).orElse(0).compareTo(indexSet.extractIndexNumber(indexName1).orElse(0)))
-            .collect(Collectors.toCollection(LinkedHashSet::new));
-        orderedIndices
-            .stream()
-            .skip(orderedIndices.size() - removeCount)
-            .forEach(indexName -> {
-                final String strategyName = this.getClass().getCanonicalName();
-                final String msg = "Running retention strategy [" + strategyName + "] for index <" + indexName + ">";
-                LOG.info(msg);
-                activityWriter.write(new Activity(msg, IndexRetentionThread.class));
+    private void runRetention(Map<String, Set<String>> deflectorIndices, int removeCount) {
+        for (String indexName : IndexHelper.getOldestIndices(deflectorIndices.keySet(), removeCount)) {
+            // Never run against the current deflector target.
+            if (deflectorIndices.get(indexName).contains(deflector.getName())) {
+                LOG.info("Not running retention against current deflector target <{}>.", indexName);
+                continue;
+            }
 
-                // Sorry if this should ever go mad. Run retention strategy!
-                retain(indexName, indexSet);
-            });
+            /*
+             * Never run against a re-opened index. Indices are marked as re-opened by storing a setting
+             * attribute and we can check for that here.
+             */
+            if (indices.isReopened(indexName)) {
+                LOG.info("Not running retention against reopened index <{}>.", indexName);
+                continue;
+            }
+
+            final String strategyName = this.getClass().getCanonicalName();
+            final String msg = "Running retention strategy [" + strategyName + "] for index <" + indexName + ">";
+            LOG.info(msg);
+            activityWriter.write(new Activity(msg, IndexRetentionThread.class));
+
+            // Sorry if this should ever go mad. Run retention strategy!
+            retain(indexName);
+
+            final ImmutableMap<String, Object> auditLogContext = ImmutableMap.of(
+                "index_name", indexName,
+                "retention_strategy", strategyName);
+            auditLogger.success("<system>", "completed", "index retention", auditLogContext);
+        }
     }
 }

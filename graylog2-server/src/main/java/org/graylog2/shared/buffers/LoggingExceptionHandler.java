@@ -28,12 +28,10 @@ public class LoggingExceptionHandler implements ExceptionHandler<Object> {
 
     @Override
     public void handleEventException(Throwable ex, long sequence, Object event) {
-        String eventStr;
+        String eventStr = "<invalid>";
         try {
             eventStr = event.toString();
-        } catch (Exception e) {
-            eventStr = "<invalid>";
-        }
+        } catch (Exception ignored) {}
         logger.warn("Unable to process event " + eventStr + ", sequence " + sequence, ex);
     }
 

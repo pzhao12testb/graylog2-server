@@ -17,10 +17,8 @@
 package org.graylog2.rest.resources.dashboards;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -28,17 +26,14 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.graylog2.audit.AuditEventTypes;
-import org.graylog2.audit.jersey.AuditEvent;
+import org.graylog2.auditlog.Actions;
+import org.graylog2.auditlog.jersey.AuditLog;
 import org.graylog2.dashboards.Dashboard;
 import org.graylog2.dashboards.DashboardService;
-import org.graylog2.dashboards.events.DashboardDeletedEvent;
-import org.graylog2.dashboards.widgets.events.WidgetUpdatedEvent;
+import org.graylog2.dashboards.widgets.WidgetResultCache;
 import org.graylog2.database.NotFoundException;
-import org.graylog2.events.ClusterEventBus;
 import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.database.ValidationException;
-import org.graylog2.plugin.database.users.User;
 import org.graylog2.rest.models.dashboards.requests.CreateDashboardRequest;
 import org.graylog2.rest.models.dashboards.requests.UpdateDashboardRequest;
 import org.graylog2.rest.models.dashboards.requests.WidgetPositionsRequest;
@@ -74,18 +69,15 @@ public class DashboardsResource extends RestResource {
 
     private final DashboardService dashboardService;
     private final ActivityWriter activityWriter;
-    private final ClusterEventBus clusterEventBus;
-    private final EventBus serverEventBus;
+    private final WidgetResultCache widgetResultCache;
 
     @Inject
     public DashboardsResource(DashboardService dashboardService,
                               ActivityWriter activityWriter,
-                              ClusterEventBus clusterEventBus,
-                              EventBus serverEventBus) {
+                              WidgetResultCache widgetResultCache) {
         this.dashboardService = dashboardService;
         this.activityWriter = activityWriter;
-        this.clusterEventBus = clusterEventBus;
-        this.serverEventBus = serverEventBus;
+        this.widgetResultCache = widgetResultCache;
     }
 
     @POST
@@ -94,7 +86,7 @@ public class DashboardsResource extends RestResource {
     @RequiresPermissions(RestPermissions.DASHBOARDS_CREATE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @AuditEvent(type = AuditEventTypes.DASHBOARD_CREATE)
+    @AuditLog(object = "dashboard", captureRequestEntity = true, captureResponseEntity = true)
     public Response create(@ApiParam(name = "JSON body", required = true) CreateDashboardRequest cr) throws ValidationException {
         // Create dashboard.
         final Dashboard dashboard = dashboardService.create(cr.title(), cr.description(), getCurrentUser().getName(), Tools.nowUTC());
@@ -103,17 +95,6 @@ public class DashboardsResource extends RestResource {
         final Map<String, String> result = ImmutableMap.of("dashboard_id", id);
         final URI dashboardUri = getUriBuilderToSelf().path(DashboardsResource.class, "get")
                 .build(id);
-
-        final User user = getCurrentUser();
-        if (!user.isLocalAdmin()) {
-            final List<String> permissions = ImmutableList.<String>builder()
-                    .addAll(user.getPermissions())
-                    .add(RestPermissions.DASHBOARDS_READ + ":" + id)
-                    .add(RestPermissions.DASHBOARDS_EDIT + ":" + id)
-                    .build();
-            user.setPermissions(permissions);
-            userService.save(user);
-        }
 
         return Response.created(dashboardUri).entity(result).build();
     }
@@ -156,20 +137,18 @@ public class DashboardsResource extends RestResource {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Dashboard not found."),
     })
-    @AuditEvent(type = AuditEventTypes.DASHBOARD_DELETE)
+    @AuditLog(object = "dashboard")
     public void delete(@ApiParam(name = "dashboardId", required = true)
-                       @PathParam("dashboardId") String dashboardId) throws NotFoundException, ValidationException {
+                       @PathParam("dashboardId") String dashboardId) throws NotFoundException {
         checkPermission(RestPermissions.DASHBOARDS_EDIT, dashboardId);
 
         final Dashboard dashboard = dashboardService.load(dashboardId);
-        dashboard.getWidgets().values().forEach((widget) -> this.clusterEventBus.post(WidgetUpdatedEvent.create(widget)));
+        dashboard.getWidgets().values().stream().forEach((this.widgetResultCache::invalidate));
         dashboardService.destroy(dashboard);
 
         final String msg = "Deleted dashboard <" + dashboard.getId() + ">. Reason: REST request.";
         LOG.info(msg);
         activityWriter.write(new Activity(msg, DashboardsResource.class));
-
-        this.serverEventBus.post(DashboardDeletedEvent.create(dashboard.getId()));
     }
 
     @PUT
@@ -180,7 +159,7 @@ public class DashboardsResource extends RestResource {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Dashboard not found.")
     })
-    @AuditEvent(type = AuditEventTypes.DASHBOARD_UPDATE)
+    @AuditLog(object = "dashboard", captureRequestEntity = true, captureResponseEntity = true)
     public void update(@ApiParam(name = "dashboardId", required = true)
                        @PathParam("dashboardId") String dashboardId,
                        @ApiParam(name = "JSON body", required = true) UpdateDashboardRequest cr) throws ValidationException, NotFoundException {
@@ -207,7 +186,7 @@ public class DashboardsResource extends RestResource {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Dashboard not found.")
     })
-    @AuditEvent(type = AuditEventTypes.DASHBOARD_WIDGET_POSITIONS_UPDATE)
+    @AuditLog(object = "dashboard widget positions", captureRequestEntity = true, captureResponseEntity = true)
     public void setPositions(
             @ApiParam(name = "dashboardId", required = true)
             @PathParam("dashboardId") String dashboardId,

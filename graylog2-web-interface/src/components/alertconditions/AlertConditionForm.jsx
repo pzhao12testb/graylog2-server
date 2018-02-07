@@ -1,76 +1,48 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import Reflux from 'reflux';
-import { ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
+import { Well } from 'react-bootstrap';
 
-import { ConfigurationForm } from 'components/configurationforms';
-
-import CombinedProvider from 'injection/CombinedProvider';
-const { AlertConditionsStore } = CombinedProvider.get('AlertConditions');
+import AlertConditionsFactory from 'logic/alertconditions/AlertConditionsFactory';
 
 const AlertConditionForm = React.createClass({
   propTypes: {
-    alertCondition: PropTypes.object,
-    onCancel: PropTypes.func,
-    onSubmit: PropTypes.func.isRequired,
-    type: PropTypes.string.isRequired,
+    type: React.PropTypes.string.isRequired,
+    alertCondition: React.PropTypes.object,
   },
-  mixins: [Reflux.connect(AlertConditionsStore)],
-
   getDefaultProps() {
     return {
-      onCancel: () => {
-      },
-      onSubmit: () => {
+      alertCondition: {
       },
     };
   },
-
   getValue() {
-    const values = this.refs.configurationForm.getValue();
     return {
-      title: values.title,
-      type: this.props.type,
-      parameters: values.configuration,
+      title: this.refs.title.value,
+      parameters: this.refs.conditionForm.getValue(),
     };
   },
-  open() {
-    this.refs.configurationForm.open();
-  },
-  _onCancel() {
-    this.props.onCancel();
-  },
-  _onSubmit() {
-    const request = this.getValue();
-    this.props.onSubmit(request);
-  },
-  _formatTitle(alertCondition, name) {
-    const action = alertCondition ? 'Update' : 'Create new';
-    const conditionName = alertCondition ? <em>{alertCondition.title || 'Untitled'}</em> : name;
-    return <span>{action} {conditionName}</span>;
-  },
+  alertConditionsFactory: new AlertConditionsFactory(),
 
+  _formatConditionFormFields(type) {
+    const typeDefinition = this.alertConditionsFactory.get(type);
+
+    if (typeDefinition !== undefined) {
+      return <typeDefinition.configuration_form ref="conditionForm" alertCondition={this.props.alertCondition.parameters}/>;
+    }
+
+    return undefined;
+  },
   render() {
-    const type = this.props.type;
     const alertCondition = this.props.alertCondition;
-    const typeDefinition = this.state.types[type];
-
     return (
-      <ConfigurationForm ref="configurationForm"
-                         key="configuration-form-alert-condition"
-                         configFields={typeDefinition.requested_configuration}
-                         title={this._formatTitle(alertCondition, typeDefinition.name)}
-                         typeName={type}
-                         submitAction={this._onSubmit}
-                         cancelAction={this._onCancel}
-                         titleValue={alertCondition ? alertCondition.title : ''}
-                         helpBlock="The alert condition title"
-                         values={alertCondition ? alertCondition.parameters : {}}>
-        <FormGroup>
-          <ControlLabel>{`${typeDefinition.name} description`}</ControlLabel>
-          <FormControl.Static>{typeDefinition.human_name}</FormControl.Static>
-        </FormGroup>
-      </ConfigurationForm>
+      <Well className="alert-type-form alert-type-form-message-count form-inline well-sm">
+        Title: <input ref="title" type="text" className="form-control alert-type-title" autoComplete="off" defaultValue={alertCondition.title}/>
+        <span className="help-text">
+          A descriptive title for this alert condition. (optional)
+        </span>
+
+        <p />
+        {this._formatConditionFormFields(this.props.type)}
+      </Well>
     );
   },
 });

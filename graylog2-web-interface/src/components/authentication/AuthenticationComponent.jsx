@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import Reflux from 'reflux';
 import { Alert, Nav, NavItem, Row, Col } from 'react-bootstrap';
@@ -22,9 +21,10 @@ import AuthenticationComponentStyle from '!style!css!./AuthenticationComponent.c
 const AuthenticationComponent = React.createClass({
 
   propTypes: {
-    location: PropTypes.object.isRequired,
-    params: PropTypes.object.isRequired,
-    children: PropTypes.element,
+    location: React.PropTypes.object.isRequired,
+    params: React.PropTypes.object.isRequired,
+    history: React.PropTypes.object.isRequired,
+    children: React.PropTypes.element,
   },
 
   mixins: [Reflux.connect(AuthenticationStore), Reflux.connect(CurrentUserStore), PermissionsMixin],
@@ -48,9 +48,11 @@ const AuthenticationComponent = React.createClass({
     if (auth) {
       return React.createElement(auth.component, {
         key: `auth-configuration-${name}`,
+        history: this.props.history,
       });
+    } else {
+      return (<Alert bsStyle="danger">Plugin component missing for authenticator <code>{name}</code>, this is an error.</Alert>);
     }
-    return (<Alert bsStyle="danger">Plugin component missing for authenticator <code>{name}</code>, this is an error.</Alert>);
   },
 
   _onUpdateProviders(config) {
@@ -64,7 +66,8 @@ const AuthenticationComponent = React.createClass({
     if (this.props.params.name === undefined) {
       return (<AuthProvidersConfig config={this.state.authenticators}
                                    descriptors={this.authenticatorConfigurations}
-                                   updateConfig={this._onUpdateProviders} />);
+                                   updateConfig={this._onUpdateProviders}
+                                   history={this.props.history} />);
     }
     return this._pluginPane();
   },
@@ -85,16 +88,16 @@ const AuthenticationComponent = React.createClass({
         });
 
         authenticators.unshift(
-          <NavItem key="divider" disabled title="Provider Settings" className={AuthenticationComponentStyle.divider}>Provider Settings</NavItem>,
+          <NavItem key="divider" disabled title="Provider Settings" className={AuthenticationComponentStyle.divider}>Provider Settings</NavItem>
         );
         authenticators.unshift(
           <LinkContainer key="container-settings" to={Routes.SYSTEM.AUTHENTICATION.PROVIDERS.CONFIG}>
             <NavItem key="settings" title="Configure Provider Order">Configure Provider Order</NavItem>
-          </LinkContainer>,
+          </LinkContainer>
         );
       }
     } else {
-      authenticators = [<NavItem key={'loading'} disabled title="Loading...">Loading...</NavItem>];
+      authenticators = [<NavItem key={"loading"} disabled title="Loading...">Loading...</NavItem>];
     }
 
     // add submenu items based on permissions
@@ -102,20 +105,20 @@ const AuthenticationComponent = React.createClass({
       authenticators.unshift(
         <LinkContainer key="roles" to={Routes.SYSTEM.AUTHENTICATION.ROLES}>
           <NavItem title="Roles">Roles</NavItem>
-        </LinkContainer>,
+        </LinkContainer>
       );
     }
     if (this.isPermitted(this.state.currentUser.permissions, ['users:list'])) {
       authenticators.unshift(
         <LinkContainer key="users" to={Routes.SYSTEM.AUTHENTICATION.USERS.LIST}>
           <NavItem title="Users">Users</NavItem>
-        </LinkContainer>,
+        </LinkContainer>
       );
     }
 
     if (authenticators.length === 0) {
       // special case, this is a user editing their own profile
-      authenticators = [<LinkContainer key="profile-edit" to={Routes.SYSTEM.AUTHENTICATION.USERS.edit(encodeURIComponent(this.state.currentUser.username))}>
+      authenticators = [<LinkContainer key="profile-edit" to={Routes.SYSTEM.AUTHENTICATION.USERS.edit(this.state.currentUser.username)}>
         <NavItem title="Edit User">Edit User</NavItem>
       </LinkContainer>];
     }
@@ -125,7 +128,7 @@ const AuthenticationComponent = React.createClass({
       </Nav>
     );
 
-    const contentComponent = React.Children.count(this.props.children) === 1 ? React.Children.only(this.props.children) : this._contentComponent();
+    let contentComponent = React.Children.count(this.props.children) === 1 ? React.Children.only(this.props.children) : this._contentComponent();
 
     return (<Row>
       <Col md={2} className={AuthenticationComponentStyle.subnavigation}>{subnavigation}</Col>

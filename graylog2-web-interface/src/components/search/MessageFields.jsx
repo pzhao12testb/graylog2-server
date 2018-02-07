@@ -1,15 +1,14 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import { ChangedMessageField, MessageField } from 'components/search';
 
 const MessageFields = React.createClass({
   propTypes: {
-    customFieldActions: PropTypes.node,
-    disableFieldActions: PropTypes.bool,
-    message: PropTypes.object.isRequired,
-    possiblyHighlight: PropTypes.func.isRequired,
-    showDecoration: PropTypes.bool,
+    customFieldActions: React.PropTypes.node,
+    disableFieldActions: React.PropTypes.bool,
+    message: React.PropTypes.object.isRequired,
+    possiblyHighlight: React.PropTypes.func.isRequired,
+    showDecoration: React.PropTypes.bool,
   },
 
   getDefaultProps() {
@@ -19,23 +18,15 @@ const MessageFields = React.createClass({
   },
 
   _formatFields(fields, showDecoration) {
-    const decorationStats = this.props.message.decoration_stats;
-
-    if (!showDecoration || !decorationStats) {
-      const decoratedFields = decorationStats ? Object.keys(decorationStats.changed_fields) : [];
-      return Object.keys(fields)
-        .sort()
-        .map((key) => {
-          return (
-            <MessageField key={key} {...this.props} fieldName={key} value={fields[key]}
-                               disableFieldActions={this.props.disableFieldActions || decoratedFields.indexOf(key) !== -1} />
-          );
-        });
+    if (!showDecoration || !this.props.message.decoration_stats) {
+      return Object.keys(fields).sort().map(key => <MessageField key={key} {...this.props} fieldName={key} value={fields[key]} />);
     }
+
+    const decorationStats = this.props.message.decoration_stats;
 
     const allKeys = Object.keys(decorationStats.removed_fields).concat(Object.keys(fields)).sort();
 
-    return allKeys.map((key) => {
+    return allKeys.map(key => {
       if (decorationStats.added_fields[key]) {
         return <ChangedMessageField key={key} fieldName={key} newValue={fields[key]} />;
       }

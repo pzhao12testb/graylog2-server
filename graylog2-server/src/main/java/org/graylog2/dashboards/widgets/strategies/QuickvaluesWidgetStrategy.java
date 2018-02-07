@@ -22,30 +22,43 @@ import com.google.inject.assistedinject.AssistedInject;
 import org.graylog2.dashboards.widgets.InvalidWidgetConfigurationException;
 import org.graylog2.indexer.results.TermsResult;
 import org.graylog2.indexer.searches.Searches;
-import org.graylog2.indexer.searches.Sorting;
 import org.graylog2.plugin.dashboards.widgets.ComputationResult;
 import org.graylog2.plugin.dashboards.widgets.WidgetStrategy;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-public class QuickvaluesWidgetStrategy extends QuickvaluesBaseWidgetStrategy {
+public class QuickvaluesWidgetStrategy implements WidgetStrategy {
 
     public interface Factory extends WidgetStrategy.Factory<QuickvaluesWidgetStrategy> {
         @Override
         QuickvaluesWidgetStrategy create(Map<String, Object> config, TimeRange timeRange, String widgetId);
     }
 
-    private final int dataTableLimit;
+    private final String query;
+    @Nullable
+    private final String streamId;
+
+    private final String field;
+    private final Searches searches;
+    private final TimeRange timeRange;
 
     @AssistedInject
     public QuickvaluesWidgetStrategy(Searches searches, @Assisted Map<String, Object> config, @Assisted TimeRange timeRange, @Assisted String widgetId) throws InvalidWidgetConfigurationException {
-        super(searches, timeRange, config, widgetId);
+        this.searches = searches;
+        this.timeRange = timeRange;
 
-        this.dataTableLimit = (int) firstNonNull(config.get("data_table_limit"), 50);
+        if (!checkConfig(config)) {
+            throw new InvalidWidgetConfigurationException("Missing or invalid widget configuration. Provided config was: " + config.toString());
+        }
+
+        this.query = (String)config.get("query");
+
+        this.field = (String) config.get("field");
+        this.streamId = (String) config.get("stream_id");
     }
 
     @Override
@@ -55,16 +68,18 @@ public class QuickvaluesWidgetStrategy extends QuickvaluesBaseWidgetStrategy {
             filter = "streams:" + streamId;
         }
 
-        final Sorting.Direction sortDirection = getSortingDirection(sortOrder);
-        final TermsResult terms = searches.terms(field, stackedFields, dataTableLimit, query, filter, this.timeRange, sortDirection);
+        final TermsResult terms = searches.terms(field, 50, query, filter, this.timeRange);
 
         Map<String, Object> result = Maps.newHashMap();
         result.put("terms", terms.getTerms());
-        result.put("terms_mapping", terms.termsMapping());
         result.put("total", terms.getTotal());
         result.put("other", terms.getOther());
         result.put("missing", terms.getMissing());
 
-        return new ComputationResult(result, terms.tookMs());
+        return new ComputationResult(result, terms.took().millis());
+    }
+
+    private boolean checkConfig(Map<String, Object> config) {
+        return config.containsKey("field");
     }
 }

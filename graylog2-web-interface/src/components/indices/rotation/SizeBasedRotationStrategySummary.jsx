@@ -1,16 +1,15 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import NumberUtils from 'util/NumberUtils';
 
 const SizeBasedRotationStrategySummary = React.createClass({
   propTypes: {
-    config: PropTypes.object.isRequired,
+    config: React.PropTypes.object.isRequired,
   },
 
   render() {
     return (
       <div>
-        <dl>
+        <dl className="deflist">
           <dt>Index rotation strategy:</dt>
           <dd>Index Size</dd>
           <dt>Max index size:</dt>

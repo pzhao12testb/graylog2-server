@@ -16,10 +16,10 @@
  */
 package org.graylog2.inputs.converters;
 
+import com.google.common.collect.ImmutableMap;
 import org.graylog2.plugin.inputs.Converter;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,7 +41,7 @@ public class TokenizerConverter extends Converter {
         }
 
         if (value.contains("=")) {
-            final Map<String, String> fields = new HashMap<>();
+            final ImmutableMap.Builder<String, String> fields = ImmutableMap.builder();
 
             Matcher m = PATTERN.matcher(value);
             while (m.find()) {
@@ -52,16 +52,15 @@ public class TokenizerConverter extends Converter {
                 fields.put(removeQuotes(m.group(1)), removeQuotes(m.group(2)));
             }
 
-            return fields;
+            return fields.build();
         } else {
             return Collections.emptyMap();
         }
     }
 
     private String removeQuotes(String s) {
-        final boolean doubleQuotes = s.startsWith("\"") && s.endsWith("\"");
-        final boolean singleQuotes = s.startsWith("'") && s.endsWith("'");
-        if (doubleQuotes || singleQuotes) {
+        if ((s.startsWith("\"") && s.endsWith("\"")) ||
+                (s.startsWith("'") && s.endsWith("'")) ) {
             return s.substring(1, s.length() - 1);
         } else {
             return s;

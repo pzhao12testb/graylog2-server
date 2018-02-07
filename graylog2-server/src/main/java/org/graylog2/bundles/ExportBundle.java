@@ -19,8 +19,8 @@ package org.graylog2.bundles;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.validator.constraints.NotBlank;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Set;
@@ -51,15 +51,6 @@ public class ExportBundle {
     @JsonProperty
     @NotNull
     private Set<String> grokPatterns = Collections.emptySet();
-    @JsonProperty
-    @NotNull
-    private Set<String> lookupTables = Collections.emptySet();
-    @JsonProperty
-    @NotNull
-    private Set<String> lookupCaches = Collections.emptySet();
-    @JsonProperty
-    @NotNull
-    private Set<String> lookupDataAdapters = Collections.emptySet();
 
     public String getName() {
         return name;
@@ -123,29 +114,5 @@ public class ExportBundle {
 
     public void setGrokPatterns(Set<String> grokPatterns) {
         this.grokPatterns = grokPatterns;
-    }
-
-    public Set<String> getLookupTables() {
-        return lookupTables;
-    }
-
-    public void setLookupTables(Set<String> lookupTables) {
-        this.lookupTables = lookupTables;
-    }
-
-    public Set<String> getLookupCaches() {
-        return lookupCaches;
-    }
-
-    public void setLookupCaches(Set<String> lookupCaches) {
-        this.lookupCaches = lookupCaches;
-    }
-
-    public Set<String> getLookupDataAdapters() {
-        return lookupDataAdapters;
-    }
-
-    public void setLookupDataAdapters(Set<String> lookupDataAdapters) {
-        this.lookupDataAdapters = lookupDataAdapters;
     }
 }

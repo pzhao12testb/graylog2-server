@@ -16,6 +16,7 @@
  */
 package org.graylog2.periodical;
 
+import com.codahale.metrics.MetricRegistry;
 import org.graylog2.Configuration;
 import org.graylog2.outputs.BlockingBatchedESOutput;
 import org.graylog2.outputs.OutputRegistry;
@@ -26,15 +27,20 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
+/**
+ * @author Dennis Oelkers <dennis@torch.sh>
+ */
 public class BatchedElasticSearchOutputFlushThread extends Periodical {
     private static final Logger LOG = LoggerFactory.getLogger(BatchedElasticSearchOutputFlushThread.class);
     private final OutputRegistry outputRegistry;
     private final Configuration configuration;
+    private MetricRegistry registry;
 
     @Inject
-    public BatchedElasticSearchOutputFlushThread(OutputRegistry outputRegistry, Configuration configuration) {
+    public BatchedElasticSearchOutputFlushThread(OutputRegistry outputRegistry, Configuration configuration, MetricRegistry registry) {
         this.outputRegistry = outputRegistry;
         this.configuration = configuration;
+        this.registry = registry;
     }
 
     @Override

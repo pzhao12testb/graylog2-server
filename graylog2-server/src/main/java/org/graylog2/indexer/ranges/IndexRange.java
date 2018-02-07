@@ -19,7 +19,6 @@ package org.graylog2.indexer.ranges;
 import org.joda.time.DateTime;
 
 import java.util.Comparator;
-import java.util.List;
 
 public interface IndexRange {
     String FIELD_TOOK_MS = "took_ms";
@@ -27,7 +26,6 @@ public interface IndexRange {
     String FIELD_END = "end";
     String FIELD_BEGIN = "begin";
     String FIELD_INDEX_NAME = "index_name";
-    String FIELD_STREAM_IDS = "stream_ids";
     Comparator<IndexRange> COMPARATOR = new IndexRangeComparator();
 
     String indexName();
@@ -39,6 +37,4 @@ public interface IndexRange {
     DateTime calculatedAt();
 
     int calculationDuration();
-
-    List<String> streamIds();
 }

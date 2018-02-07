@@ -16,11 +16,7 @@
  */
 package org.graylog2.shared.metrics;
 
-import com.codahale.metrics.Clock;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
-import com.codahale.metrics.Reservoir;
-import com.codahale.metrics.Snapshot;
-import com.codahale.metrics.Timer;
+import com.codahale.metrics.*;
 
 import java.util.concurrent.TimeUnit;
 

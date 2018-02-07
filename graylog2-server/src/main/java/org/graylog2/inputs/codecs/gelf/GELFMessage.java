@@ -123,12 +123,10 @@ public class GELFMessage {
 
         private static final int HEADER_SIZE = 2;
 
-        private final byte first;
-        private final byte second;
+        private final byte[] bytes;
 
         Type(final byte first, final byte second) {
-            this.first = first;
-            this.second = second;
+            bytes = new byte[]{first, second};
         }
 
         static Type determineType(final byte first, final byte second) {
@@ -136,8 +134,8 @@ public class GELFMessage {
             if (first == ZLIB.first()) {
                 // zlib's second byte is for flags and a checksum -
                 // make sure it is positive.
-                int secondInt = second;
-                if (secondInt < 0) {
+                int secondInt = ZLIB.second();
+                if (second < 0) {
                     secondInt += 256;
                 }
                 // the second byte is not constant for zlib, it
@@ -169,11 +167,11 @@ public class GELFMessage {
         }
 
         public byte first() {
-            return first;
+            return bytes[0];
         }
 
         public byte second() {
-            return second;
+            return bytes[1];
         }
     }
 }

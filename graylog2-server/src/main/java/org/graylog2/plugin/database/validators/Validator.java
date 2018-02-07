@@ -16,6 +16,10 @@
  */
 package org.graylog2.plugin.database.validators;
 
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
 public interface Validator {
-    ValidationResult validate(Object value);
+
+    public ValidationResult validate(Object value);
 }

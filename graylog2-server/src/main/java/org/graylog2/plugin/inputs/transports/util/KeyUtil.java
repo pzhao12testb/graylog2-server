@@ -22,8 +22,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import io.netty.handler.ssl.PemPrivateKey;
-import io.netty.handler.ssl.PemX509Certificate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +36,10 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -55,7 +53,6 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -67,7 +64,7 @@ import java.util.regex.Pattern;
 public class KeyUtil {
     private static final Logger LOG = LoggerFactory.getLogger(KeyUtil.class);
     private static final Joiner JOINER = Joiner.on(",").skipNulls();
-    private static final Pattern KEY_PATTERN = Pattern.compile("-{5}BEGIN (?:(RSA|DSA|EC)? )?(ENCRYPTED )?PRIVATE KEY-{5}\\r?\\n([A-Z0-9a-z+/\\r\\n]+={0,2})\\r?\\n-{5}END (?:(?:RSA|DSA|EC)? )?(?:ENCRYPTED )?PRIVATE KEY-{5}\\r?\\n$", Pattern.MULTILINE);
+    private static final Pattern KEY_PATTERN = Pattern.compile("-{5}BEGIN (?:(RSA|DSA)? )?(ENCRYPTED )?PRIVATE KEY-{5}\\r?\\n([A-Z0-9a-z+/\\r\\n]+={0,2})\\r?\\n-{5}END (?:(?:RSA|DSA)? )?(?:ENCRYPTED )?PRIVATE KEY-{5}\\r?\\n$", Pattern.MULTILINE);
 
     public static TrustManager[] initTrustStore(File tlsClientAuthCertFile)
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
@@ -86,10 +83,11 @@ public class KeyUtil {
         return instance.getTrustManagers();
     }
 
-    private static void loadCertificates(KeyStore trustStore, File certFile, CertificateFactory cf)
+    @VisibleForTesting
+    protected static void loadCertificates(KeyStore trustStore, File certFile, CertificateFactory cf)
             throws CertificateException, KeyStoreException, IOException {
         if (certFile.isFile()) {
-            final Collection<? extends Certificate> certificates = loadCertificates(certFile.toPath());
+            final Collection<? extends Certificate> certificates = cf.generateCertificates(new FileInputStream(certFile));
             int i = 0;
             for (Certificate cert : certificates) {
                 final String alias = certFile.getAbsolutePath() + "_" + i;
@@ -98,18 +96,9 @@ public class KeyUtil {
                 LOG.debug("Added certificate with alias {} to trust store: {}", alias, cert);
             }
         } else if (certFile.isDirectory()) {
-            try (DirectoryStream<Path> ds = Files.newDirectoryStream(certFile.toPath())) {
-                for (Path f : ds) {
-                    loadCertificates(trustStore, f.toFile(), cf);
-                }
+            for (Path f : Files.newDirectoryStream(certFile.toPath())) {
+                loadCertificates(trustStore, f.toFile(), cf);
             }
-        }
-    }
-
-    public static Collection<? extends Certificate> loadCertificates(Path certificatePath) throws CertificateException, IOException {
-        final CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        try (InputStream inputStream = Files.newInputStream(certificatePath)) {
-            return cf.generateCertificates(inputStream);
         }
     }
 
@@ -117,7 +106,8 @@ public class KeyUtil {
             throws IOException, GeneralSecurityException {
         final KeyStore ks = KeyStore.getInstance("JKS");
         ks.load(null, null);
-        final Collection<? extends Certificate> certChain = loadCertificates(tlsCertFile.toPath());
+        final CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        final Collection<? extends Certificate> certChain = cf.generateCertificates(new FileInputStream(tlsCertFile));
         final PrivateKey privateKey = loadPrivateKey(tlsKeyFile, tlsKeyPassword);
         final char[] password = Strings.nullToEmpty(tlsKeyPassword).toCharArray();
         ks.setKeyEntry("key", privateKey, password, certChain.toArray(new Certificate[certChain.size()]));
@@ -140,7 +130,7 @@ public class KeyUtil {
 
     @VisibleForTesting
     protected static PrivateKey loadPrivateKey(File file, String password) throws IOException, GeneralSecurityException {
-        try (final InputStream is = Files.newInputStream(file.toPath())) {
+        try (final InputStream is = new FileInputStream(file)) {
             final byte[] keyBytes = ByteStreams.toByteArray(is);
             final String keyString = new String(keyBytes, StandardCharsets.US_ASCII);
             final Matcher m = KEY_PATTERN.matcher(keyString);
@@ -156,20 +146,17 @@ public class KeyUtil {
 
             final EncodedKeySpec keySpec = createKeySpec(encoded, password);
             if (keySpec == null) {
-                throw new IllegalArgumentException("Unsupported key type: " + file);
+                throw new IllegalArgumentException("Unsupported key type");
             }
 
-            final String[] keyAlgorithms = {"RSA", "DSA", "EC"};
-            for (String keyAlgorithm : keyAlgorithms) {
-                try {
-                    @SuppressWarnings("InsecureCryptoUsage") final KeyFactory keyFactory = KeyFactory.getInstance(keyAlgorithm);
-                    return keyFactory.generatePrivate(keySpec);
-                } catch (InvalidKeySpecException e) {
-                    LOG.debug("Loading {} private key from \"{}\" failed", keyAlgorithm, file, e);
-                }
+            try {
+                final KeyFactory RSAkf = KeyFactory.getInstance("RSA");
+                return RSAkf.generatePrivate(keySpec);
+            } catch (InvalidKeySpecException e) {
+                LOG.debug("Loading RSA private key failed, attempting DSA next", e);
+                final KeyFactory DSAkf = KeyFactory.getInstance("DSA");
+                return DSAkf.generatePrivate(keySpec);
             }
-
-            throw new IllegalArgumentException("Unsupported key type: " + file);
         }
     }
 
@@ -185,19 +172,9 @@ public class KeyUtil {
         final PBEKeySpec keySpec = new PBEKeySpec(password.toCharArray());
         final SecretKey secretKey = kf.generateSecret(keySpec);
 
-        @SuppressWarnings("InsecureCryptoUsage") final Cipher cipher = Cipher.getInstance(pkInfo.getAlgName());
+        final Cipher cipher = Cipher.getInstance(pkInfo.getAlgName());
         cipher.init(Cipher.DECRYPT_MODE, secretKey, pkInfo.getAlgParameters());
 
         return pkInfo.getKeySpec(cipher);
-    }
-
-    public static X509Certificate readCertificate(Path path) throws IOException {
-        final byte[] bytes = Files.readAllBytes(path);
-        return PemX509Certificate.valueOf(bytes);
-    }
-
-    public static PrivateKey readPrivateKey(Path path) throws IOException {
-        final byte[] bytes = Files.readAllBytes(path);
-        return PemPrivateKey.valueOf(bytes);
     }
 }

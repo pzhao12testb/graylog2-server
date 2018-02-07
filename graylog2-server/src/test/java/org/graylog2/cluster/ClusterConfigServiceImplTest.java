@@ -41,10 +41,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.Map;
@@ -53,6 +53,7 @@ import static com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb.InMemoryMongoR
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ClusterConfigServiceImplTest {
     @ClassRule
     public static final InMemoryMongoDb IN_MEMORY_MONGO_DB = newInMemoryMongoDbRule().build();
@@ -61,9 +62,6 @@ public class ClusterConfigServiceImplTest {
 
     @Rule
     public MongoConnectionRule mongoRule = MongoConnectionRule.build("test");
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
-
     private final ObjectMapper objectMapper = new ObjectMapperProvider().get();
 
     @Mock
@@ -86,6 +84,7 @@ public class ClusterConfigServiceImplTest {
                 provider,
                 mongoRule.getMongoConnection(),
                 nodeId,
+                objectMapper,
                 new ChainingClassLoader(getClass().getClassLoader()),
                 clusterEventBus
         );
@@ -94,7 +93,6 @@ public class ClusterConfigServiceImplTest {
     @After
     public void tearDown() {
         DateTimeUtils.setCurrentMillisSystem();
-        mongoConnection.getMongoDatabase().drop();
     }
 
     @Test
@@ -139,34 +137,6 @@ public class ClusterConfigServiceImplTest {
         assertThat(collection.count()).isEqualTo(1L);
 
         assertThat(clusterConfigService.get(CustomConfig.class)).isNull();
-    }
-
-    @Test
-    @UsingDataSet(loadStrategy = LoadStrategyEnum.DELETE_ALL)
-    public void getWithKeyReturnsExistingConfig() throws Exception {
-        DBObject dbObject = new BasicDBObjectBuilder()
-                .add("type", "foo")
-                .add("payload", Collections.singletonMap("text", "TEST"))
-                .add("last_updated", TIME.toString())
-                .add("last_updated_by", "ID")
-                .get();
-        final DBCollection collection = mongoConnection.getDatabase().getCollection(COLLECTION_NAME);
-        collection.save(dbObject);
-
-        assertThat(collection.count()).isEqualTo(1L);
-
-        CustomConfig customConfig = clusterConfigService.get("foo", CustomConfig.class);
-        assertThat(customConfig).isInstanceOf(CustomConfig.class);
-        assertThat(customConfig.text).isEqualTo("TEST");
-    }
-
-    @Test
-    @UsingDataSet(loadStrategy = LoadStrategyEnum.DELETE_ALL)
-    public void getWithKeyReturnsNullOnNonExistingConfig() throws Exception {
-        final DBCollection collection = mongoConnection.getDatabase().getCollection(COLLECTION_NAME);
-        assertThat(collection.count()).isEqualTo(0L);
-
-        assertThat(clusterConfigService.get("foo", CustomConfig.class)).isNull();
     }
 
     @Test

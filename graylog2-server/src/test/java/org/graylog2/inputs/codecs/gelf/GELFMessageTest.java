@@ -22,8 +22,12 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * @author lennart.koopmann
+ */
 public class GELFMessageTest {
-    private static final String GELF_JSON = "{\"version\": \"1.1\", \"message\":\"foobar\",\"host\":\"example.com\",\"_lol_utf8\":\"\u00FC\"}";
+
+    public final static String GELF_JSON = "{\"message\":\"foo\",\"host\":\"bar\",\"_lol_utf8\":\"\u00FC\"}";
 
     @Test
     public void testGetGELFTypeDetectsZLIBCompressedMessage() throws Exception {
@@ -67,10 +71,8 @@ public class GELFMessageTest {
 
     @Test
     public void testGetJSONFromZLIBCompressedMessage() throws Exception {
-        for (int level = -1; level <= 9; level++) {
-            final GELFMessage msg = new GELFMessage(TestHelper.zlibCompress(GELF_JSON, level));
-            assertEquals(GELF_JSON, msg.getJSON(1024));
-        }
+        GELFMessage msg = new GELFMessage(TestHelper.zlibCompress(GELF_JSON));
+        assertEquals(GELF_JSON, msg.getJSON(1024));
     }
 
     @Test
@@ -102,4 +104,5 @@ public class GELFMessageTest {
         assertEquals(seqCnt, chunk.getSequenceCount());
         assertArrayEquals(data, chunk.getData());
     }
+
 }

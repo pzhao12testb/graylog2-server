@@ -14,9 +14,6 @@ const StringUtils = {
   pluralize(number, singular, plural) {
     return (number === 1 || number === '1' ? singular : plural);
   },
-  stringify(text) {
-    return (typeof text === 'object' ? JSON.stringify(text) : String(text)) || '';
-  },
 };
 
 export default StringUtils;

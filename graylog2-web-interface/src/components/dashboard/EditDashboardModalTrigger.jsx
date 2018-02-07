@@ -1,11 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import { EditDashboardModal } from 'components/dashboard';
 
 const EditDashboardModalTrigger = React.createClass({
   propTypes: {
-    action: PropTypes.string.isRequired,
+    action: React.PropTypes.string.isRequired,
   },
   getDefaultProps() {
     return {
@@ -16,7 +15,7 @@ const EditDashboardModalTrigger = React.createClass({
     return this.props.action === 'create';
   },
   openModal() {
-    this.refs.modal.open();
+    this.refs['modal'].open();
   },
   render() {
     let triggerButtonContent;
@@ -30,10 +29,10 @@ const EditDashboardModalTrigger = React.createClass({
     return (
       <span>
         <button onClick={this.openModal}
-                className={`btn ${this.props.buttonClass}`}>
+                className={"btn " + this.props.buttonClass}>
           {triggerButtonContent}
         </button>
-        <EditDashboardModal ref="modal" {...this.props} />
+        <EditDashboardModal ref="modal" {...this.props}/>
       </span>
     );
   },

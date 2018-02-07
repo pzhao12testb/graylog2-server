@@ -1,15 +1,14 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 const ClosingRetentionStrategySummary = React.createClass({
   propTypes: {
-    config: PropTypes.object.isRequired,
+    config: React.PropTypes.object.isRequired,
   },
 
   render() {
     return (
       <div>
-        <dl>
+        <dl className="deflist">
           <dt>Index retention strategy:</dt>
           <dd>Close</dd>
           <dt>Max number of indices:</dt>

@@ -61,17 +61,18 @@ public class ClusterConfigServiceImpl implements ClusterConfigService {
     public ClusterConfigServiceImpl(final MongoJackObjectMapperProvider mapperProvider,
                                     final MongoConnection mongoConnection,
                                     final NodeId nodeId,
+                                    final ObjectMapper objectMapper,
                                     final ChainingClassLoader chainingClassLoader,
                                     final ClusterEventBus clusterEventBus) {
         this(JacksonDBCollection.wrap(prepareCollection(mongoConnection), ClusterConfig.class, String.class, mapperProvider.get()),
-                nodeId, mapperProvider.get(), chainingClassLoader, clusterEventBus);
+                nodeId, objectMapper, chainingClassLoader, clusterEventBus);
     }
 
-    private ClusterConfigServiceImpl(final JacksonDBCollection<ClusterConfig, String> dbCollection,
-                                     final NodeId nodeId,
-                                     final ObjectMapper objectMapper,
-                                     final ChainingClassLoader chainingClassLoader,
-                                     final EventBus clusterEventBus) {
+    ClusterConfigServiceImpl(final JacksonDBCollection<ClusterConfig, String> dbCollection,
+                             final NodeId nodeId,
+                             final ObjectMapper objectMapper,
+                             final ChainingClassLoader chainingClassLoader,
+                             final EventBus clusterEventBus) {
         this.nodeId = checkNotNull(nodeId);
         this.dbCollection = checkNotNull(dbCollection);
         this.objectMapper = checkNotNull(objectMapper);
@@ -98,25 +99,20 @@ public class ClusterConfigServiceImpl implements ClusterConfigService {
     }
 
     @Override
-    public <T> T get(String key, Class<T> type) {
-        ClusterConfig config = dbCollection.findOne(DBQuery.is("type", key));
+    public <T> T get(Class<T> type) {
+        ClusterConfig config = dbCollection.findOne(DBQuery.is("type", type.getCanonicalName()));
 
         if (config == null) {
-            LOG.debug("Couldn't find cluster config of type {}", key);
+            LOG.debug("Couldn't find cluster config of type {}", type.getCanonicalName());
             return null;
         }
 
         T result = extractPayload(config.payload(), type);
         if (result == null) {
-            LOG.error("Couldn't extract payload from cluster config (type: {})", key);
+            LOG.error("Couldn't extract payload from cluster config (type: {})", type.getCanonicalName());
         }
 
         return result;
-    }
-
-    @Override
-    public <T> T get(Class<T> type) {
-        return get(type.getCanonicalName(), type);
     }
 
     @Override

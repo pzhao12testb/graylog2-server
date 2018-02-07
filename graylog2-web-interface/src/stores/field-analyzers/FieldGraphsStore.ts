@@ -1,3 +1,5 @@
+/// <reference path='../../../node_modules/immutable/dist/immutable.d.ts'/>
+
 const $ = require('jquery');
 import Immutable = require('immutable');
 
@@ -35,6 +37,11 @@ interface CreateStackedChartWidgetRequestParams {
     renderer: string;
     interpolation: string;
     interval: string;
+    rangeType: string;
+    relative?: number;
+    from?: string;
+    to?: string;
+    keyword?: string;
     series: Array<StackedChartSeries>;
 }
 
@@ -193,7 +200,7 @@ class FieldGraphsStore {
       }
     }
 
-    updateFieldGraphData(graphId: string, graphContainer: Element) {
+    updateFieldGraphData(graphId: string) {
         const seriesName = graphId;
         const graphOptions = this.fieldGraphs.get(graphId);
         let effectiveGraphId;
@@ -211,7 +218,7 @@ class FieldGraphsStore {
             effectiveGraphId = graphId;
         }
 
-        FieldChart.updateFieldChartData(effectiveGraphId, graphOptions, seriesName, $(graphContainer));
+        FieldChart.updateFieldChartData(effectiveGraphId, graphOptions, seriesName);
     }
 
     stackGraphs(targetGraphId: string, sourceGraphId: string) {
@@ -272,6 +279,7 @@ class FieldGraphsStore {
             renderer: graphOptions['renderer'],
             interpolation: graphOptions['interpolation'],
             interval: graphOptions['interval'],
+            rangeType: graphOptions['rangetype']
         };
 
         var series = [this.getSeriesInformation(graphOptions)];
@@ -284,6 +292,19 @@ class FieldGraphsStore {
         }, this);
 
         requestParams['series'] = series;
+
+        switch (graphOptions['rangetype']) {
+            case "relative":
+                requestParams['relative'] = graphOptions['range']['relative'];
+                break;
+            case "absolute":
+                requestParams['from'] = graphOptions['range']['from'];
+                requestParams['to'] = graphOptions['range']['to'];
+                break;
+            case "keyword":
+                requestParams['keyword'] = graphOptions['range']['keyword'];
+                break;
+        }
 
         return <CreateStackedChartWidgetRequestParams> requestParams;
     }

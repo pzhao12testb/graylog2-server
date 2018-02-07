@@ -17,51 +17,39 @@
 package org.graylog2.indexer.indices.jobs;
 
 import com.google.inject.assistedinject.Assisted;
-import org.graylog2.indexer.IndexSetRegistry;
+import org.graylog2.indexer.Deflector;
 import org.graylog2.indexer.SetIndexReadOnlyJob;
-import org.graylog2.indexer.indices.Indices;
 import org.graylog2.indexer.ranges.CreateNewSingleIndexRangeJob;
 import org.graylog2.system.jobs.SystemJob;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
 public class SetIndexReadOnlyAndCalculateRangeJob extends SystemJob {
-    private static final Logger LOG = LoggerFactory.getLogger(SetIndexReadOnlyAndCalculateRangeJob.class);
-
     public interface Factory {
         SetIndexReadOnlyAndCalculateRangeJob create(String indexName);
     }
 
     private final SetIndexReadOnlyJob.Factory setIndexReadOnlyJobFactory;
     private final CreateNewSingleIndexRangeJob.Factory createNewSingleIndexRangeJobFactory;
-    private final IndexSetRegistry indexSetRegistry;
-    private final Indices indices;
+    private final Deflector deflector;
     private final String indexName;
 
     @Inject
     public SetIndexReadOnlyAndCalculateRangeJob(SetIndexReadOnlyJob.Factory setIndexReadOnlyJobFactory,
                                                 CreateNewSingleIndexRangeJob.Factory createNewSingleIndexRangeJobFactory,
-                                                IndexSetRegistry indexSetRegistry,
-                                                Indices indices,
+                                                Deflector deflector,
                                                 @Assisted String indexName) {
         this.setIndexReadOnlyJobFactory = setIndexReadOnlyJobFactory;
         this.createNewSingleIndexRangeJobFactory = createNewSingleIndexRangeJobFactory;
-        this.indexSetRegistry = indexSetRegistry;
-        this.indices = indices;
+        this.deflector = deflector;
         this.indexName = indexName;
     }
 
     @Override
     public void execute() {
-        if (indices.isClosed(indexName)) {
-            LOG.debug("Not running job for closed index <{}>", indexName);
-            return;
-        }
         final SystemJob setIndexReadOnlyJob = setIndexReadOnlyJobFactory.create(indexName);
         setIndexReadOnlyJob.execute();
-        final SystemJob createNewSingleIndexRangeJob = createNewSingleIndexRangeJobFactory.create(indexSetRegistry.getAll(), indexName);
+        final SystemJob createNewSingleIndexRangeJob = createNewSingleIndexRangeJobFactory.create(deflector, indexName);
         createNewSingleIndexRangeJob.execute();
 
     }

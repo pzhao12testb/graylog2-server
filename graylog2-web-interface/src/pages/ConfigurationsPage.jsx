@@ -1,7 +1,7 @@
 import React from 'react';
 import Reflux from 'reflux';
 import { Row, Col } from 'react-bootstrap';
-import { DocumentTitle, PageHeader, Spinner } from 'components/common';
+import { PageHeader, Spinner } from 'components/common';
 import { PluginStore } from 'graylog-web-plugin/plugin';
 
 import StoreProvider from 'injection/StoreProvider';
@@ -43,8 +43,9 @@ const ConfigurationsPage = React.createClass({
   _getConfig(configType) {
     if (this.state.configuration && this.state.configuration[configType]) {
       return this.state.configuration[configType];
+    } else {
+      return null;
     }
-    return null;
   },
 
   _onUpdate(configType) {
@@ -84,7 +85,7 @@ const ConfigurationsPage = React.createClass({
           <Col md={6}>
             {pluginConfigs.shift() || (<span>&nbsp;</span>)}
           </Col>
-        </Row>,
+        </Row>
       );
     }
 
@@ -116,35 +117,33 @@ const ConfigurationsPage = React.createClass({
     const pluginConfigRows = this._pluginConfigRows();
 
     return (
-      <DocumentTitle title="Configurations">
-        <span>
-          <PageHeader title="Configurations">
-            <span>
-              You can configure system settings for different sub systems on this page.
-            </span>
-          </PageHeader>
+      <span>
+        <PageHeader title="Configurations">
+          <span>
+            You can configure system settings for different sub systems on this page.
+          </span>
+        </PageHeader>
 
-          <Row className="content">
-            <Col md={6}>
-              {searchesConfigComponent}
-            </Col>
-            <Col md={6}>
-              {messageProcessorsConfigComponent}
-            </Col>
-          </Row>
+        <Row className="content">
+          <Col md={6}>
+            {searchesConfigComponent}
+          </Col>
+          <Col md={6}>
+            {messageProcessorsConfigComponent}
+          </Col>
+        </Row>
 
-          {pluginConfigRows.length > 0 && <Row className="content">
-            <Col md={12}>
-              <h2>Plugins</h2>
-              <p className="description">Configuration for installed plugins.</p>
-              <hr className="separator" />
-              <div className="top-margin">
-                {pluginConfigRows}
-              </div>
-            </Col>
-          </Row>}
-        </span>
-      </DocumentTitle>
+        {pluginConfigRows.length > 0 && <Row className="content">
+          <Col md={12}>
+            <h2>Plugins</h2>
+            <p className="description">Configuration for installed plugins.</p>
+            <hr className="separator" />
+            <div className="top-margin">
+              {pluginConfigRows}
+            </div>
+          </Col>
+        </Row>}
+      </span>
     );
   },
 });

@@ -1,21 +1,15 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import Reflux from 'reflux';
-import { ButtonGroup, ButtonToolbar, DropdownButton, MenuItem } from 'react-bootstrap';
+import React, {PropTypes} from 'react';
+import { ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import Immutable from 'immutable';
 
-import CombinedProvider from 'injection/CombinedProvider';
 import StoreProvider from 'injection/StoreProvider';
-
 const SearchStore = StoreProvider.getStore('Search');
-const { DashboardsActions, DashboardsStore } = CombinedProvider.get('Dashboards');
+const DashboardsStore = StoreProvider.getStore('Dashboards');
 const WidgetsStore = StoreProvider.getStore('Widgets');
 
 import PermissionsMixin from 'util/PermissionsMixin';
 import { WidgetCreationModal } from 'components/widgets';
 import { EditDashboardModal } from 'components/dashboard';
-
-import style from './AddToDashboardMenu.css';
 
 const AddToDashboardMenu = React.createClass({
   propTypes: {
@@ -27,48 +21,70 @@ const AddToDashboardMenu = React.createClass({
     fields: PropTypes.array,
     hidden: PropTypes.bool,
     pullRight: PropTypes.bool,
-    appendMenus: PropTypes.oneOfType([
-      PropTypes.arrayOf(PropTypes.element),
-      PropTypes.element,
-    ]),
     children: PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.element),
       PropTypes.element,
     ]),
   },
 
-  mixins: [Reflux.connect(DashboardsStore), PermissionsMixin],
+  mixins: [PermissionsMixin],
 
   getInitialState() {
     return {
+      dashboards: undefined,
       selectedDashboard: '',
-      loading: false,
     };
   },
 
   getDefaultProps() {
     return {
-      bsStyle: 'default',
+      bsStyle: 'info',
       configuration: {},
       hidden: false,
       pullRight: false,
     };
   },
 
-  _selectDashboard(dashboardId) {
-    this.setState({ selectedDashboard: dashboardId });
+  componentDidMount() {
+    this._initializeDashboards();
+    this._setOriginalSearchParams();
+  },
+  _initializeDashboards() {
+    DashboardsStore.addOnWritableDashboardsChangedCallback(dashboards => {
+      if (this.isMounted()) {
+        this._updateDashboards(dashboards);
+      }
+    });
+
+    const dashboards = DashboardsStore.writableDashboards;
+    // Trigger a dashboard update if the store haven't got any dashboards
+    if (dashboards.size === 0) {
+      DashboardsStore.updateWritableDashboards();
+      return;
+    }
+
+    this._updateDashboards(dashboards);
+  },
+  _updateDashboards(newDashboards) {
+    this.setState({dashboards: newDashboards});
+  },
+  _setOriginalSearchParams() {
+    this.searchParams = SearchStore.getOriginalSearchParams();
+  },
+  _selectDashboard(event, dashboardId) {
+    this.setState({selectedDashboard: dashboardId});
     this.refs.widgetModal.open();
   },
   _saveWidget(title, configuration) {
     let widgetConfig = Immutable.Map(this.props.configuration);
-    let searchParams = Immutable.Map(SearchStore.getOriginalSearchParams());
+    let searchParams = Immutable.Map(this.searchParams);
     if (searchParams.has('range_type')) {
       switch (searchParams.get('range_type')) {
         case 'relative':
           const relativeTimeRange = Immutable.Map({
             // Changes the "relative" key used to store relative time-range to "range"
-            range: searchParams.get('relative'),
-            type: 'relative',
+            'range': searchParams.get('relative'),
+            'type': 'relative',
           });
           searchParams = searchParams
             .set('timerange', relativeTimeRange)
@@ -79,9 +95,9 @@ const AddToDashboardMenu = React.createClass({
           const from = searchParams.get('from');
           const to = searchParams.get('to');
           const absoluteTimeRange = Immutable.Map({
-            type: 'absolute',
-            from: from,
-            to: to,
+            'type': 'absolute',
+            'from': from,
+            'to': to,
           });
           searchParams = searchParams
             .set('timerange', absoluteTimeRange)
@@ -91,8 +107,8 @@ const AddToDashboardMenu = React.createClass({
           break;
         case 'keyword':
           const keywordTimeRange = Immutable.Map({
-            type: 'keyword',
-            keyword: searchParams.get('keyword'),
+            'type': 'keyword',
+            'keyword': searchParams.get('keyword'),
           });
           searchParams = searchParams
             .set('timerange', keywordTimeRange)
@@ -104,19 +120,10 @@ const AddToDashboardMenu = React.createClass({
     if (searchParams.has('streamId')) {
       searchParams = searchParams.set('stream_id', searchParams.get('streamId')).delete('streamId');
     }
-
-    if (widgetConfig.has('series')) {
-      // If widget has several series, each of them will contain a query, delete it from global widget configuration.
-      searchParams = searchParams.delete('query');
-    }
-
     widgetConfig = searchParams.merge(widgetConfig).merge(configuration);
 
-    this.setState({ loading: true });
     const promise = WidgetsStore.addWidget(this.state.selectedDashboard, this.props.widgetType, title, widgetConfig.toJS());
-    promise
-      .then(() => this.refs.widgetModal.saved())
-      .finally(() => this.setState({ loading: false }));
+    promise.done(() => this.refs.widgetModal.saved());
   },
   _createNewDashboard() {
     this.refs.createDashboardModal.open();
@@ -135,13 +142,13 @@ const AddToDashboardMenu = React.createClass({
   _renderDashboardMenu() {
     let dashboards = Immutable.List();
 
-    this.state.writableDashboards
+    this.state.dashboards
       .sortBy(dashboard => dashboard.title)
-      .forEach((dashboard) => {
+      .forEach((dashboard, id) => {
         dashboards = dashboards.push(
-          <MenuItem eventKey={dashboard.id} key={dashboard.id}>
+          <MenuItem eventKey={id} key={dashboard.id}>
             {dashboard.title}
-          </MenuItem>,
+          </MenuItem>
         );
       });
 
@@ -166,7 +173,7 @@ const AddToDashboardMenu = React.createClass({
     }
 
     return (
-      <div style={{ display: 'inline' }}>
+      <div style={{display: 'inline'}}>
         <DropdownButton bsStyle={this.props.bsStyle}
                         bsSize="small"
                         title={this.props.title}
@@ -175,36 +182,28 @@ const AddToDashboardMenu = React.createClass({
                         id="no-dashboards-available-dropdown">
           {option}
         </DropdownButton>
-        <EditDashboardModal ref="createDashboardModal" onSaved={this._selectDashboard} />
+        <EditDashboardModal ref="createDashboardModal" onSaved={(id) => this._selectDashboard(undefined, id)}/>
       </div>
     );
   },
   render() {
-    let addToDashboardMenu;
-    if (this.state.writableDashboards === undefined) {
-      addToDashboardMenu = this._renderLoadingDashboardsMenu();
+    let dropdownMenu;
+    if (this.state.dashboards === undefined) {
+      dropdownMenu = this._renderLoadingDashboardsMenu();
     } else {
-      addToDashboardMenu = (!this.props.hidden && (this.state.writableDashboards.size > 0 ? this._renderDashboardMenu() : this._renderNoDashboardsMenu()));
+      dropdownMenu = (!this.props.hidden && (this.state.dashboards.size > 0 ? this._renderDashboardMenu() : this._renderNoDashboardsMenu()));
     }
 
-    const { appendMenus, children } = this.props;
-    const loading = this.state.loading;
-
     return (
-      <div style={{ display: 'inline-block' }}>
-        <ButtonToolbar className={style.toolbar}>
-          <ButtonGroup>
-            {addToDashboardMenu}
-            {appendMenus}
-          </ButtonGroup>
-
-          {children}
-        </ButtonToolbar>
+      <div style={{display: 'inline-block'}}>
+        <ButtonGroup>
+          {this.props.children}
+          {dropdownMenu}
+        </ButtonGroup>
         <WidgetCreationModal ref="widgetModal"
                              widgetType={this.props.widgetType}
                              onConfigurationSaved={this._saveWidget}
-                             fields={this.props.fields}
-                             loading={loading} />
+                             fields={this.props.fields}/>
       </div>
     );
   },

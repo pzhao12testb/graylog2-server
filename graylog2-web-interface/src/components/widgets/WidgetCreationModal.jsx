@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Input } from 'components/bootstrap';
+import { Input } from 'react-bootstrap';
 import { PluginStore } from 'graylog-web-plugin/plugin';
 
 import BootstrapModalForm from 'components/bootstrap/BootstrapModalForm';
@@ -11,17 +10,10 @@ import StringUtils from 'util/StringUtils';
 
 const WidgetCreationModal = React.createClass({
   propTypes: {
-    fields: PropTypes.array,
-    onConfigurationSaved: PropTypes.func.isRequired,
-    onModalHidden: PropTypes.func,
-    widgetType: PropTypes.string.isRequired,
-    loading: PropTypes.bool,
-  },
-
-  getDefaultProps() {
-    return {
-      loading: false,
-    };
+    fields: React.PropTypes.array,
+    onConfigurationSaved: React.PropTypes.func.isRequired,
+    onModalHidden: React.PropTypes.func,
+    widgetType: React.PropTypes.string.isRequired,
   },
 
   getInitialState() {
@@ -49,7 +41,7 @@ const WidgetCreationModal = React.createClass({
 
     const configKeys = Object.keys(this.state.config);
     if (configKeys.length === 0) {
-      this.setState({ config: this.refs.pluginConfiguration.getInitialConfiguration() });
+      this.setState({config: this.refs.pluginConfiguration.getInitialConfiguration()});
     }
   },
 
@@ -83,7 +75,7 @@ const WidgetCreationModal = React.createClass({
   _setConfigurationSetting(key, value) {
     const newConfig = ObjectUtils.clone(this.state.config);
     newConfig[key] = value;
-    this.setState({ config: newConfig });
+    this.setState({config: newConfig});
   },
 
   _bindConfigurationValue(event) {
@@ -121,15 +113,13 @@ const WidgetCreationModal = React.createClass({
   },
 
   render() {
-    const loading = this.props.loading;
     return (
       <BootstrapModalForm ref="createModal"
                           title="Create Dashboard Widget"
                           onModalOpen={this._getInitialConfiguration}
                           onModalClose={this.props.onModalHidden}
                           onSubmitForm={this.save}
-                          submitButtonText={loading ? 'Creating...' : 'Create'}
-                          submitButtonDisabled={loading}>
+                          submitButtonText="Create">
         <fieldset>
           <Input type="text"
                  label="Title"
@@ -139,7 +129,7 @@ const WidgetCreationModal = React.createClass({
                  defaultValue={this.state.title}
                  onChange={this._bindValue}
                  help="Type a name that describes your widget."
-                 autoFocus />
+                 autoFocus/>
           {this._getSpecificWidgetInputs()}
         </fieldset>
       </BootstrapModalForm>

@@ -38,6 +38,7 @@ import org.mongojack.DBCursor;
 import org.mongojack.DBSort;
 import org.mongojack.DBUpdate;
 import org.mongojack.JacksonDBCollection;
+import org.mongojack.WriteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,14 +62,15 @@ public class ClusterEventPeriodical extends Periodical {
     public ClusterEventPeriodical(final MongoJackObjectMapperProvider mapperProvider,
                                   final MongoConnection mongoConnection,
                                   final NodeId nodeId,
+                                  final ObjectMapper objectMapper,
                                   final ChainingClassLoader chainingClassLoader,
                                   final EventBus serverEventBus,
                                   final ClusterEventBus clusterEventBus) {
         this(JacksonDBCollection.wrap(prepareCollection(mongoConnection), ClusterEvent.class, String.class, mapperProvider.get()),
-                nodeId, mapperProvider.get(), chainingClassLoader, serverEventBus, clusterEventBus);
+                nodeId, objectMapper, chainingClassLoader, serverEventBus, clusterEventBus);
     }
 
-    private ClusterEventPeriodical(final JacksonDBCollection<ClusterEvent, String> dbCollection,
+    ClusterEventPeriodical(final JacksonDBCollection<ClusterEvent, String> dbCollection,
                            final NodeId nodeId,
                            final ObjectMapper objectMapper,
                            final ChainingClassLoader chainingClassLoader,
@@ -196,7 +198,7 @@ public class ClusterEventPeriodical extends Periodical {
     }
 
     private void updateConsumers(final String eventId, final NodeId nodeId) {
-        dbCollection.updateById(eventId, DBUpdate.addToSet("consumers", nodeId.toString()));
+        final WriteResult<ClusterEvent, String> writeResult = dbCollection.updateById(eventId, DBUpdate.addToSet("consumers", nodeId.toString()));
     }
 
     private Object extractPayload(Object payload, String eventClass) {

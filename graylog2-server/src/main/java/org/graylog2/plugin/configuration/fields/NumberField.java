@@ -31,7 +31,7 @@ public class NumberField extends AbstractConfigurationField {
         IS_PORT_NUMBER
     }
 
-    private Number defaultValue;
+    private int defaultValue;
 
     private final List<String> attributes;
 
@@ -39,33 +39,17 @@ public class NumberField extends AbstractConfigurationField {
         this(name, humanName, defaultValue, description, isOptional, new Attribute[0]);
     }
 
-    public NumberField(String name, String humanName, double defaultValue, String description, Optional isOptional) {
-        this(name, humanName, defaultValue, description, isOptional, new Attribute[0]);
-    }
-
     public NumberField(String name, String humanName, int defaultValue, String description, Attribute... attributes) {
         this(name, humanName, defaultValue, description, Optional.NOT_OPTIONAL, attributes);
     }
 
-    public NumberField(String name, String humanName, double defaultValue, String description, Attribute... attributes) {
-        this(name, humanName, defaultValue, description, Optional.NOT_OPTIONAL, attributes);
-    }
-
-    public NumberField(String name, String humanName, int defaultValue, String description, Optional isOptional, Attribute... attributes) {
-        this(name, humanName, (Number) defaultValue, description, isOptional, attributes);
-    }
-
-    public NumberField(String name, String humanName, double defaultValue, String description, Optional isOptional, Attribute... attributes) {
-        this(name, humanName, (Number) defaultValue, description, isOptional, attributes);
-    }
-
-    private NumberField(String name, String humanName, Number defaultValue, String description, Optional isOptional, Attribute... attributes) {
+    public NumberField(String name, String humanName, int defaultValue, String description, Optional isOptional, Attribute... attrs) {
         super(FIELD_TYPE, name, humanName, description, isOptional);
         this.defaultValue = defaultValue;
 
         this.attributes = Lists.newArrayList();
-        if (attributes != null) {
-            for (Attribute attribute : attributes) {
+        if (attrs != null) {
+            for (Attribute attribute : attrs) {
                 this.attributes.add(attribute.toString().toLowerCase(Locale.ENGLISH));
             }
         }
@@ -78,8 +62,8 @@ public class NumberField extends AbstractConfigurationField {
 
     @Override
     public void setDefaultValue(Object defaultValue) {
-        if (defaultValue instanceof Number) {
-            this.defaultValue = (Number) defaultValue;
+        if (defaultValue instanceof Integer) {
+            this.defaultValue = (int) defaultValue;
         }
     }
 

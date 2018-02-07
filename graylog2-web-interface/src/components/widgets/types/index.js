@@ -4,7 +4,6 @@ import {
   HistogramVisualization,
   NumericVisualization,
   QuickValuesVisualization,
-  QuickValuesHistogramVisualization,
   StackedGraphVisualization } from 'components/visualizations';
 import {
   CountWidgetCreateConfiguration,
@@ -12,8 +11,6 @@ import {
   FieldChartWidgetConfiguration,
   QuickValuesWidgetCreateConfiguration,
   QuickValuesWidgetEditConfiguration,
-  QuickValuesHistogramWidgetCreateConfiguration,
-  QuickValuesHistogramWidgetEditConfiguration,
   StackedChartWidgetConfiguration,
   StatisticalCountWidgetCreateConfiguration,
   StatisticalCountWidgetEditConfiguration } from 'components/widgets/configurations';
@@ -62,15 +59,6 @@ PluginStore.register(new PluginManifest({}, {
       visualizationComponent: QuickValuesVisualization,
       configurationCreateComponent: QuickValuesWidgetCreateConfiguration,
       configurationEditComponent: QuickValuesWidgetEditConfiguration,
-    },
-    {
-      type: 'QUICKVALUES_HISTOGRAM',
-      displayName: 'Quick values histogram',
-      defaultHeight: 1,
-      defaultWidth: 2,
-      visualizationComponent: QuickValuesHistogramVisualization,
-      configurationCreateComponent: QuickValuesHistogramWidgetCreateConfiguration,
-      configurationEditComponent: QuickValuesHistogramWidgetEditConfiguration,
     },
     {
       type: 'FIELD_CHART',

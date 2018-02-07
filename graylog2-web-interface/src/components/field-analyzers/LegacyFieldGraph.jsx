@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
-import { Button, ButtonGroup, DropdownButton } from 'react-bootstrap';
+import {Button, DropdownButton, MenuItem} from 'react-bootstrap';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 
 import AddToDashboardMenu from 'components/dashboard/AddToDashboardMenu';
@@ -27,11 +26,12 @@ const LegacyFieldGraph = React.createClass({
   },
   mixins: [PureRenderMixin],
   componentDidMount() {
-    FieldGraphsStore.renderFieldGraph(this.props.graphOptions, this.fieldGraphContainer);
+    const graphContainer = ReactDOM.findDOMNode(this.refs.fieldGraphContainer);
+    FieldGraphsStore.renderFieldGraph(this.props.graphOptions, graphContainer);
   },
   componentDidUpdate(prevProps) {
     if (this.props.from !== prevProps.from || this.props.to !== prevProps.to) {
-      FieldGraphsStore.updateFieldGraphData(this.props.graphId, this.fieldGraphContainer);
+      FieldGraphsStore.updateFieldGraphData(this.props.graphId);
     }
   },
 
@@ -63,7 +63,7 @@ const LegacyFieldGraph = React.createClass({
     return this.props.graphOptions[configKey] === value ? 'selected' : '';
   },
   _getSubmenu(configKey, values) {
-    const submenuItems = values.map((value) => {
+    const submenuItems = values.map(value => {
       const readableName = (configKey === 'valuetype') ? GraphVisualization.getReadableFieldChartStatisticalFunction(value) : value;
       return (
         <li key={`menu-item-${value}`}>
@@ -94,25 +94,19 @@ const LegacyFieldGraph = React.createClass({
         <li key="valuetype-submenu" className="dropdown-submenu left-submenu">
           <a href="#">Value</a>
           {this._getSubmenu('valuetype', this.statisticalFunctions)}
-        </li>,
+        </li>
       );
       submenus.push(
         <li key="resolution-submenu" className="dropdown-submenu left-submenu">
           <a href="#">Resolution</a>
           {this._getSubmenu('interval', this.resolutions)}
-        </li>,
+        </li>
       );
     }
 
-    const menus = (
-      <DropdownButton bsSize="small" className="graph-settings" title="Customize" id="customize-field-graph-dropdown" pullRight>
-        {submenus}
-      </DropdownButton>
-    );
-
     return (
-      <div ref={(c) => { this.fieldGraphContainer = c; }}
-           style={{ display: this.props.hidden ? 'none' : 'block' }}
+      <div ref="fieldGraphContainer"
+           style={{display: this.props.hidden ? 'none' : 'block'}}
            className="content-col field-graph-container"
            data-chart-id={this.props.graphId}
            data-from={this._getFirstGraphValue()}
@@ -123,35 +117,41 @@ const LegacyFieldGraph = React.createClass({
                               dashboards={this.props.dashboards}
                               widgetType={this._getWidgetType()}
                               configuration={this._getWidgetConfiguration()}
+                              bsStyle="default"
                               pullRight
-                              permissions={this.props.permissions}
-                              appendMenus={menus}>
-            {/* It needs to be an anchor to properly work as a draggable handle */}
+                              permissions={this.props.permissions}>
+            <DropdownButton bsSize="small" className="graph-settings" title="Customize"
+                            id="customize-field-graph-dropdown">
+              {submenus}
+              <MenuItem divider/>
+              <MenuItem onSelect={this.props.onDelete}>Dismiss</MenuItem>
+            </DropdownButton>
+          </AddToDashboardMenu>
+
+          <div style={{display: 'inline', marginLeft: 20}}>
             <Button href="#"
                     bsSize="small"
                     className="reposition-handle"
-                    onClick={e => e.preventDefault()}
+                    onClick={(e) => e.preventDefault()}
                     title="Drag and drop to merge the graph into another">
-              <i className="fa fa-reorder" />
+              <i className="fa fa-reorder"></i>
             </Button>
-
-            <Button bsSize="small" onClick={this.props.onDelete}><i className="fa fa-close" /></Button>
-          </AddToDashboardMenu>
+          </div>
         </div>
         <h1>{this._getGraphTitle()}</h1>
 
         <ul className="field-graph-query-container">
           <li>
-            <div className="field-graph-query-color" style={{ backgroundColor: '#4DBCE9' }} />
+            <div className="field-graph-query-color" style={{backgroundColor: '#4DBCE9'}}></div>
             &nbsp;
-            <span className="type-description" />
-            Query: <span className="field-graph-query" />
+            <span className="type-description"></span>
+            Query: <span className="field-graph-query"></span>
           </li>
         </ul>
 
         <div className="field-graph-components">
-          <div className="field-graph-y-axis" style={{ display: 'none' }} />
-          <div className="field-graph" />
+          <div className="field-graph-y-axis" style={{display: 'none'}}></div>
+          <div className="field-graph"></div>
         </div>
 
         <div className="merge-hint">

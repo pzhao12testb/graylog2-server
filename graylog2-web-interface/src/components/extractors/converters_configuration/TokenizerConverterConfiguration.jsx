@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { Input } from 'components/bootstrap';
+import React, {PropTypes} from 'react';
+import {Input} from 'react-bootstrap';
 
 import FormUtils from 'util/FormsUtils';
 
@@ -14,7 +13,7 @@ const TokenizerConverterConfiguration = React.createClass({
     this.props.onChange(this.props.type, this._getConverterObject());
   },
   _getConverterObject() {
-    return { type: this.props.type, config: this.props.configuration };
+    return {type: this.props.type, config: this.props.configuration};
   },
   _toggleConverter(event) {
     let converter;
@@ -32,7 +31,7 @@ const TokenizerConverterConfiguration = React.createClass({
                label="Add Key=Value pairs as fields"
                wrapperClassName="col-md-offset-2 col-md-10"
                defaultChecked
-               onChange={this._toggleConverter} />
+               onChange={this._toggleConverter}/>
       </div>
     );
   },

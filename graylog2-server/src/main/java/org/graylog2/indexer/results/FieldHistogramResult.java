@@ -18,10 +18,11 @@ package org.graylog2.indexer.results;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import io.searchbox.core.search.aggregation.CardinalityAggregation;
-import io.searchbox.core.search.aggregation.HistogramAggregation;
-import io.searchbox.core.search.aggregation.StatsAggregation;
-import io.searchbox.core.search.aggregation.ValueCountAggregation;
+import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.graylog2.indexer.searches.Searches;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -40,14 +41,14 @@ public class FieldHistogramResult extends HistogramResult {
             .put("mean", 0)
             .build();
 
-    private final Map<Long, Map<String, Number>> result;
+    private final Histogram result;
     private final Searches.DateHistogramInterval interval;
 
-    public FieldHistogramResult(HistogramAggregation histogramAggregation, String originalQuery, String builtQuery, Searches.DateHistogramInterval interval, long tookMs) {
-        super(originalQuery, builtQuery, tookMs);
+    public FieldHistogramResult(Histogram result, String originalQuery, BytesReference builtQuery, Searches.DateHistogramInterval interval, TimeValue took) {
+        super(originalQuery, builtQuery, took);
 
+        this.result = result;
         this.interval = interval;
-        this.result = getResultsFromHistogramAggregation(histogramAggregation);
     }
 
     @Override
@@ -56,50 +57,32 @@ public class FieldHistogramResult extends HistogramResult {
     }
 
     @Override
-    public Map getResults() {
-        return result;
-    }
-
-    private Map<Long, Map<String, Number>> getResultsFromHistogramAggregation(HistogramAggregation histogramAggregation) {
-        if (histogramAggregation.getBuckets().isEmpty()) {
+    public Map<Long, Map<String, Number>> getResults() {
+        if (result.getBuckets().isEmpty()) {
             return Collections.emptyMap();
         }
 
         final Map<Long, Map<String, Number>> results = Maps.newTreeMap();
-        for (HistogramAggregation.Histogram b : histogramAggregation.getBuckets()) {
+        for (Histogram.Bucket b : result.getBuckets()) {
             final ImmutableMap.Builder<String, Number> resultMap = ImmutableMap.builder();
-            resultMap.put("total_count", b.getCount());
+            resultMap.put("total_count", b.getDocCount());
 
-            final StatsAggregation stats = b.getStatsAggregation(Searches.AGG_STATS);
-            if (stats != null) {
-                resultMap.put("count", stats.getCount() == null ? 0L : stats.getCount());
-                resultMap.put("min", stats.getMin() == null ? 0D : stats.getMin());
-                resultMap.put("max", stats.getMax() == null ? 0D : stats.getMax());
-                resultMap.put("total", stats.getSum() == null ? 0D : stats.getSum());
-                resultMap.put("mean", stats.getAvg() == null ? 0D : stats.getAvg());
-            } else {
-                // Get count from count aggregation if stats aggregation was not requested
-                final ValueCountAggregation count = b.getValueCountAggregation(Searches.AGG_VALUE_COUNT);
-                resultMap.put("count", count == null ? 0L : count.getValueCount());
-                resultMap.put("min", Double.NaN);
-                resultMap.put("max", Double.NaN);
-                resultMap.put("total", Double.NaN);
-                resultMap.put("mean", Double.NaN);
-            }
+            final Stats stats = b.getAggregations().get(Searches.AGG_STATS);
+            resultMap.put("count", stats.getCount());
+            resultMap.put("min", stats.getMin());
+            resultMap.put("max", stats.getMax());
+            resultMap.put("total", stats.getSum());
+            resultMap.put("mean", stats.getAvg());
 
-            final CardinalityAggregation cardinality = b.getCardinalityAggregation(Searches.AGG_CARDINALITY);
-            resultMap.put("cardinality", cardinality == null ? 0 : cardinality.getCardinality());
+            // cardinality is only calculated if it was explicitly requested, so this might be null
+            final Cardinality cardinality = b.getAggregations().get(Searches.AGG_CARDINALITY);
+            resultMap.put("cardinality", cardinality == null ? 0 : cardinality.getValue());
 
-            final DateTime keyAsDate = new DateTime(b.getKey());
+            final DateTime keyAsDate = (DateTime) b.getKey();
             final long timestamp = keyAsDate.getMillis() / 1000L;
             results.put(timestamp, resultMap.build());
         }
 
-        fillEmptyTimestamps(results);
-        return results;
-    }
-
-    private void fillEmptyTimestamps(Map<Long, Map<String, Number>> results) {
         final long minTimestamp = Collections.min(results.keySet());
         final long maxTimestamp = Collections.max(results.keySet());
         final MutableDateTime currentTime = new MutableDateTime(minTimestamp, DateTimeZone.UTC);
@@ -107,7 +90,7 @@ public class FieldHistogramResult extends HistogramResult {
         while (currentTime.getMillis() < maxTimestamp) {
             final Map<String, Number> entry = results.get(currentTime.getMillis());
 
-            // advance timestamp by the interval
+            // advance timestamp by the interval's seconds value
             currentTime.add(interval.getPeriod());
 
             if (entry == null) {
@@ -115,15 +98,6 @@ public class FieldHistogramResult extends HistogramResult {
                 results.put(currentTime.getMillis(), EMPTY_RESULT);
             }
         }
-    }
-
-    private FieldHistogramResult(String originalQuery, String builtQuery, Searches.DateHistogramInterval interval) {
-        super(originalQuery, builtQuery, 0);
-
-        this.result = Collections.emptyMap();
-        this.interval = interval;
-    }
-    public static HistogramResult empty(String originalQuery, String builtQuery, Searches.DateHistogramInterval interval) {
-        return new FieldHistogramResult(originalQuery, builtQuery, interval);
+        return results;
     }
 }

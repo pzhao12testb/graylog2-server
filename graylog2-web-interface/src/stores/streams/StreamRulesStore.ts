@@ -3,7 +3,6 @@ import ApiRoutes = require('routing/ApiRoutes');
 const UserNotification = require('util/UserNotification');
 const URLUtils = require('util/URLUtils');
 const fetch = require('logic/rest/FetchProvider').default;
-const lodash = require('lodash');
 
 interface StreamRuleType {
   id: number;
@@ -75,9 +74,6 @@ class StreamRulesStore {
   }
   _emitChange() {
     this.callbacks.forEach((callback) => callback());
-  }
-  unregister(callback: Callback) {
-    lodash.pull(this.callbacks, callback);
   }
 }
 

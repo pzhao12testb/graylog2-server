@@ -18,14 +18,12 @@ package org.graylog2.plugin;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.google.common.net.InetAddresses;
 import org.graylog2.inputs.TestHelper;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -34,8 +32,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -62,7 +58,6 @@ public class ToolsTest {
     public void testGetUriWithScheme() throws Exception {
         assertEquals(Tools.getUriWithScheme(new URI("http://example.com"), "gopher").getScheme(), "gopher");
         assertNull(Tools.getUriWithScheme(new URI("http://example.com"), null).getScheme());
-        assertNull(Tools.getUriWithScheme(null, "http"));
     }
 
     @Test
@@ -180,7 +175,7 @@ public class ToolsTest {
     }
 
     @Test
-    public void testAsSortedSet() {
+    public void testAsSortedList() {
         List<Integer> sortMe = Lists.newArrayList();
         sortMe.add(0);
         sortMe.add(2);
@@ -190,7 +185,7 @@ public class ToolsTest {
         sortMe.add(25);
         sortMe.add(11);
 
-        SortedSet<Integer> expected = new TreeSet<>();
+        List<Integer> expected = Lists.newArrayList();
         expected.add(0);
         expected.add(1);
         expected.add(2);
@@ -199,7 +194,7 @@ public class ToolsTest {
         expected.add(11);
         expected.add(25);
 
-        assertEquals(expected, Tools.asSortedSet(sortMe));
+        assertEquals(expected, Tools.asSortedList(sortMe));
     }
 
     @Test
@@ -219,7 +214,7 @@ public class ToolsTest {
     }
 
     @Test
-    public void testGetDouble() throws Exception {
+    public void testGetInt() throws Exception {
         assertEquals(null, Tools.getDouble(null));
         assertEquals(null, Tools.getDouble(""));
 
@@ -243,26 +238,6 @@ public class ToolsTest {
                 return "42.23";
             }
         }), 0);
-    }
-
-    @Test
-    public void testGetNumberForDifferentFormats() {
-        assertEquals(Tools.getNumber(1, null).intValue(), 1);
-        assertEquals(Tools.getNumber(1, null).doubleValue(), 1.0, 0.0);
-
-        assertEquals(Tools.getNumber(42.23, null).intValue(), 42);
-        assertEquals(Tools.getNumber(42.23, null).doubleValue(), 42.23, 0.0);
-
-        assertEquals(Tools.getNumber("17", null).intValue(), 17);
-        assertEquals(Tools.getNumber("17", null).doubleValue(), 17.0, 0.0);
-
-        assertEquals(Tools.getNumber("23.42", null).intValue(), 23);
-        assertEquals(Tools.getNumber("23.42", null).doubleValue(), 23.42, 0.0);
-
-        assertNull(Tools.getNumber(null, null));
-        assertNull(Tools.getNumber(null, null));
-        assertEquals(Tools.getNumber(null, 1).intValue(), 1);
-        assertEquals(Tools.getNumber(null, 1).doubleValue(), 1.0, 0.0);
     }
 
     @Test
@@ -290,50 +265,5 @@ public class ToolsTest {
         assertTrue(Tools.dateTimeFromDouble(1381076986).toString().startsWith("2013-10-06T"));
         assertTrue(Tools.dateTimeFromDouble(1381079085.6).toString().startsWith("2013-10-06T"));
         assertTrue(Tools.dateTimeFromDouble(1381079085.06).toString().startsWith("2013-10-06T"));
-    }
-
-    @Test
-    public void uriWithTrailingSlashReturnsNullIfURIIsNull() {
-        assertNull(Tools.uriWithTrailingSlash(null));
-    }
-
-    @Test
-    public void uriWithTrailingSlashReturnsURIWithTrailingSlashIfTrailingSlashIsMissing() throws URISyntaxException {
-        final String uri = "http://example.com/api/";
-        assertEquals(URI.create(uri), Tools.uriWithTrailingSlash(URI.create("http://example.com/api")));
-    }
-
-    @Test
-    public void uriWithTrailingSlashReturnsURIIfTrailingSlashIsPresent() {
-        final URI uri = URI.create("http://example.com/api/");
-        assertEquals(uri, Tools.uriWithTrailingSlash(uri));
-    }
-
-    @Test
-    public void normalizeURIAddsSchemaAndPortAndPathWithTrailingSlash() {
-        final URI uri = URI.create("foobar://example.com");
-        assertEquals(URI.create("quux://example.com:1234/foobar/"), Tools.normalizeURI(uri, "quux", 1234, "/foobar"));
-    }
-
-    @Test
-    public void normalizeURIReturnsNormalizedURI() {
-        final URI uri = URI.create("foobar://example.com//foo/////bar");
-        assertEquals(URI.create("quux://example.com:1234/foo/bar/"), Tools.normalizeURI(uri, "quux", 1234, "/baz"));
-    }
-
-    @Test
-    public void normalizeURIReturnsNullIfURIIsNull() {
-        assertNull(Tools.normalizeURI(null, "http", 1234, "/baz"));
-    }
-
-    @Test
-    public void isWildcardAddress() {
-        assertTrue(Tools.isWildcardInetAddress(InetAddresses.forString("0.0.0.0")));
-        assertTrue(Tools.isWildcardInetAddress(InetAddresses.forString("::")));
-        assertFalse(Tools.isWildcardInetAddress(null));
-        assertFalse(Tools.isWildcardInetAddress(InetAddresses.forString("127.0.0.1")));
-        assertFalse(Tools.isWildcardInetAddress(InetAddresses.forString("::1")));
-        assertFalse(Tools.isWildcardInetAddress(InetAddresses.forString("198.51.100.23")));
-        assertFalse(Tools.isWildcardInetAddress(InetAddresses.forString("2001:DB8::42")));
     }
 }

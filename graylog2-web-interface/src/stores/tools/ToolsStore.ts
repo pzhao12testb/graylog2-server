@@ -1,3 +1,5 @@
+/// <reference path="../../../declarations/bluebird/bluebird.d.ts" />
+
 import ApiRoutes = require('routing/ApiRoutes');
 const URLUtils = require('util/URLUtils');
 const UserNotification = require('util/UserNotification');
@@ -108,28 +110,6 @@ const ToolsStore = {
         promise.catch((errorThrown) => {
             UserNotification.error('Details: ' + errorThrown,
                 'We were not able to run the substring extraction. Please check index boundaries.');
-        });
-
-        return promise;
-    },
-    testContainsString(searchString: string, string: string): Promise<Object> {
-        const url = ApiRoutes.ToolsApiController.containsStringTest().url;
-        const promise = fetch('POST', URLUtils.qualifyUrl(url), { search_string: searchString, string: string });
-
-        promise.catch((errorThrown) => {
-            UserNotification.error('Details: ' + errorThrown,
-              'Could not check if field contains the string');
-        });
-
-        return promise;
-    },
-
-    testLookupTable(lookupTableName: string, string: string): Promise<Object> {
-        const url = ApiRoutes.ToolsApiController.lookupTableTest().url;
-        const promise = fetch('POST', URLUtils.qualifyUrl(url), { lookup_table_name: lookupTableName, string: string });
-
-        promise.catch((errorThrown) => {
-            UserNotification.error('Details: ' + errorThrown, 'Could not check if lookup table translates the string');
         });
 
         return promise;

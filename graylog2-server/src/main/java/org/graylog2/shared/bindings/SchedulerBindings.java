@@ -21,14 +21,15 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import org.graylog2.periodical.Periodicals;
 import org.graylog2.plugin.Tools;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+/**
+ * @author Dennis Oelkers <dennis@torch.sh>
+ */
 public class SchedulerBindings extends AbstractModule {
-    private static final Logger LOG = LoggerFactory.getLogger(SchedulerBindings.class);
     private static final int SCHEDULED_THREADS_POOL_SIZE = 30;
 
     @Override
@@ -38,7 +39,7 @@ public class SchedulerBindings extends AbstractModule {
                 new ThreadFactoryBuilder()
                         .setNameFormat("scheduled-%d")
                         .setDaemon(false)
-                        .setUncaughtExceptionHandler(new Tools.LogUncaughtExceptionHandler(LOG))
+                        .setUncaughtExceptionHandler(new Tools.LogUncaughtExceptionHandler(LoggerFactory.getLogger("org.graylog2.scheduler.Scheduler")))
                         .build()
         );
 
@@ -49,7 +50,7 @@ public class SchedulerBindings extends AbstractModule {
                 new ThreadFactoryBuilder()
                         .setNameFormat("scheduled-daemon-%d")
                         .setDaemon(true)
-                        .setUncaughtExceptionHandler(new Tools.LogUncaughtExceptionHandler(LOG))
+                        .setUncaughtExceptionHandler(new Tools.LogUncaughtExceptionHandler(LoggerFactory.getLogger("org.graylog2.scheduler.DaemonScheduler")))
                         .build()
         );
 

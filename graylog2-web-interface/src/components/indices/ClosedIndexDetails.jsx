@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Alert, Button } from 'react-bootstrap';
 
@@ -9,8 +8,8 @@ import { IndexRangeSummary } from 'components/indices';
 
 const ClosedIndexDetails = React.createClass({
   propTypes: {
-    indexName: PropTypes.string.isRequired,
-    indexRange: PropTypes.object,
+    indexName: React.PropTypes.string.isRequired,
+    indexRange: React.PropTypes.object,
   },
   _onReopen() {
     IndicesActions.reopen(this.props.indexName);
@@ -25,10 +24,10 @@ const ClosedIndexDetails = React.createClass({
     return (
       <div className="index-info">
         <IndexRangeSummary indexRange={indexRange} />
-        <Alert bsStyle="info"><i className="fa fa-info-circle" /> This index is closed. Index information is not available{' '}
+        <Alert bsStyle="info"><i className="fa fa-info-circle"/> This index is closed. Index information is not available{' '}
           at the moment, please reopen the index and try again.</Alert>
 
-        <hr style={{ marginBottom: '5', marginTop: '10' }} />
+        <hr style={{ marginBottom: '5', marginTop: '10' }}/>
 
         <Button bsStyle="warning" bsSize="xs" onClick={this._onReopen}>Reopen index</Button>{' '}
         <Button bsStyle="danger" bsSize="xs" onClick={this._onDeleteIndex}>Delete index</Button>

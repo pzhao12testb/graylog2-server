@@ -61,7 +61,7 @@ public abstract class MessageInput implements Stoppable {
     public static final String FIELD_CONTENT_PACK = "content_pack";
 
     @SuppressWarnings("StaticNonFinalField")
-    private static int defaultRecvBufferSize = 1024 * 1024;
+    private static long defaultRecvBufferSize = 1024 * 1024;
 
     private final MetricRegistry metricRegistry;
     private final Transport transport;
@@ -81,7 +81,6 @@ public abstract class MessageInput implements Stoppable {
     private final Configuration codecConfig;
     private final Counter globalIncomingMessages;
     private final Counter emptyMessages;
-    private final Counter globalRawSize;
 
     protected String title;
     protected String creatorUserId;
@@ -114,18 +113,17 @@ public abstract class MessageInput implements Stoppable {
         this.serverStatus = serverStatus;
         this.requestedConfiguration = config.combinedRequestedConfiguration();
         this.codecConfig = config.codecConfig.getRequestedConfiguration().filter(codec.getConfiguration());
-        globalRawSize = metricRegistry.counter(GlobalMetricNames.INPUT_TRAFFIC);
         rawSize = localRegistry.meter("rawSize");
         incomingMessages = localRegistry.meter("incomingMessages");
         globalIncomingMessages = metricRegistry.counter(GlobalMetricNames.INPUT_THROUGHPUT);
         emptyMessages = localRegistry.counter("emptyMessages");
     }
 
-    public static int getDefaultRecvBufferSize() {
+    public static long getDefaultRecvBufferSize() {
         return defaultRecvBufferSize;
     }
 
-    public static void setDefaultRecvBufferSize(int size) {
+    public static void setDefaultRecvBufferSize(long size) {
         defaultRecvBufferSize = size;
     }
 
@@ -266,32 +264,28 @@ public abstract class MessageInput implements Stoppable {
     }
 
     public Map<String, Object> asMap() {
-        // This has to be mutable (see #asMapMasked) and support null values!
-        final Map<String, Object> map = new HashMap<>();
-        map.put(FIELD_TYPE, getClass().getCanonicalName());
-        map.put(FIELD_NAME, getName());
-        map.put(FIELD_TITLE, getTitle());
-        map.put(FIELD_CREATOR_USER_ID, getCreatorUserId());
-        map.put(FIELD_GLOBAL, isGlobal());
-        map.put(FIELD_CONTENT_PACK, getContentPack());
-        map.put(FIELD_CONFIGURATION, getConfiguration().getSource());
+        final MessageInput messageInput = this;
+        return new HashMap<String, Object>() {{
+            put(FIELD_TYPE, messageInput.getClass().getCanonicalName());
+            put(FIELD_NAME, messageInput.getName());
+            put(FIELD_TITLE, messageInput.getTitle());
+            put(FIELD_CREATOR_USER_ID, messageInput.getCreatorUserId());
+            put(FIELD_GLOBAL, messageInput.isGlobal());
+            put(FIELD_CONTENT_PACK, messageInput.getContentPack());
+            put(FIELD_CONFIGURATION, messageInput.getConfiguration().getSource());
 
-        if (getCreatedAt() != null) {
-            map.put(FIELD_CREATED_AT, getCreatedAt());
-        } else {
-            map.put(FIELD_CREATED_AT, Tools.nowUTC());
-        }
+            if (messageInput.getCreatedAt() != null)
+                put(FIELD_CREATED_AT, messageInput.getCreatedAt());
+            else
+                put(FIELD_CREATED_AT, Tools.nowUTC());
 
 
-        if (getStaticFields() != null && !getStaticFields().isEmpty()) {
-            map.put(FIELD_STATIC_FIELDS, getStaticFields());
-        }
+            if (messageInput.getStaticFields() != null && !messageInput.getStaticFields().isEmpty())
+                put(FIELD_STATIC_FIELDS, messageInput.getStaticFields());
 
-        if (!isGlobal()) {
-            map.put(FIELD_NODE_ID, getNodeId());
-        }
-
-        return map;
+            if (!messageInput.isGlobal())
+                put(FIELD_NODE_ID, messageInput.getNodeId());
+        }};
     }
 
     public void addStaticField(String key, String value) {
@@ -330,8 +324,7 @@ public abstract class MessageInput implements Stoppable {
     }
 
     public void processRawMessage(RawMessage rawMessage) {
-        final int payloadLength = rawMessage.getPayload().length;
-        if (payloadLength == 0) {
+        if (rawMessage.getPayload().length == 0) {
             LOG.debug("Discarding empty message {} from input [{}/{}] (remote address {}). Turn logger org.graylog2.plugin.journal.RawMessage to TRACE to see originating stack trace.",
                       rawMessage.getId(),
                       getTitle(),
@@ -350,8 +343,7 @@ public abstract class MessageInput implements Stoppable {
 
         incomingMessages.mark();
         globalIncomingMessages.inc();
-        rawSize.mark(payloadLength);
-        globalRawSize.inc(payloadLength);
+        rawSize.mark(rawMessage.getPayload().length);
     }
 
     public String getType() {

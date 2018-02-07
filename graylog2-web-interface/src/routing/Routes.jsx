@@ -1,6 +1,6 @@
-import AppConfig from "util/AppConfig";
-import {PluginStore} from "graylog-web-plugin/plugin";
-import URI from "urijs";
+import AppConfig from 'util/AppConfig';
+import { PluginStore } from 'graylog-web-plugin/plugin';
+import URI from 'urijs';
 
 /*
  * Global registry of plugin routes. Route names are generated automatically from the route path, by removing
@@ -19,7 +19,7 @@ import URI from "urijs";
  *
  */
 const pluginRoutes = {};
-PluginStore.exports('routes').forEach((pluginRoute) => {
+PluginStore.exports('routes').forEach(pluginRoute => {
   const uri = new URI(pluginRoute.path);
   const segments = uri.segment();
   const key = segments.map(segment => segment.replace(':', '')).join('_').toUpperCase();
@@ -43,16 +43,8 @@ PluginStore.exports('routes').forEach((pluginRoute) => {
 
 const Routes = {
   STARTPAGE: '/',
-  NOTFOUND: '/notfound',
   SEARCH: '/search',
   STREAMS: '/streams',
-  ALERTS: {
-    LIST: '/alerts',
-    CONDITIONS: '/alerts/conditions',
-    NEW_CONDITION: '/alerts/conditions/new',
-    NOTIFICATIONS: '/alerts/notifications',
-    NEW_NOTIFICATION: '/alerts/notifications/new',
-  },
   SOURCES: '/sources',
   DASHBOARDS: '/dashboards',
   GETTING_STARTED: '/gettingstarted',
@@ -67,55 +59,31 @@ const Routes = {
       LIST: '/system/indices',
       FAILURES: '/system/indices/failures',
     },
-    INDEX_SETS: {
-      CONFIGURATION: (indexSetId, from) => {
-        if (from) {
-          return `/system/index_sets/${indexSetId}/configuration?from=${from}`;
-        }
-        return `/system/index_sets/${indexSetId}/configuration`;
-      },
-      SHOW: indexSetId => `/system/index_sets/${indexSetId}`,
-      CREATE: '/system/index_sets/create',
-    },
     INPUTS: '/system/inputs',
     LOGGING: '/system/logging',
-    METRICS: nodeId => `/system/metrics/node/${nodeId}`,
+    METRICS: (nodeId) => `/system/metrics/node/${nodeId}`,
     NODES: {
       LIST: '/system/nodes',
-      SHOW: nodeId => `/system/nodes/${nodeId}`,
+      SHOW: (nodeId) => `/system/nodes/${nodeId}`,
     },
-    THREADDUMP: nodeId => `/system/threaddump/${nodeId}`,
+    THREADDUMP: (nodeId) => `/system/threaddump/${nodeId}`,
     OUTPUTS: '/system/outputs',
     OVERVIEW: '/system/overview',
+    LDAP: {
+      SETTINGS: '/system/ldap',
+      GROUPS: '/system/ldap/groups',
+    },
     AUTHENTICATION: {
       OVERVIEW: '/system/authentication',
       ROLES: '/system/authentication/roles',
       USERS: {
         CREATE: '/system/authentication/users/new',
-        edit: username => `/system/authentication/users/edit/${username}`,
+        edit: (username) => `/system/authentication/users/edit/${username}`,
         LIST: '/system/authentication/users',
       },
       PROVIDERS: {
         CONFIG: '/system/authentication/config',
-        provider: name => `/system/authentication/config/${name}`,
-      },
-    },
-    LOOKUPTABLES: {
-      OVERVIEW: '/system/lookuptables',
-      CREATE: '/system/lookuptables/create',
-      show: tableName => `/system/lookuptables/table/${tableName}`,
-      edit: tableName => `/system/lookuptables/table/${tableName}/edit`,
-      CACHES: {
-        OVERVIEW: '/system/lookuptables/caches',
-        CREATE: '/system/lookuptables/caches/create',
-        show: cacheName => `/system/lookuptables/caches/${cacheName}`,
-        edit: cacheName => `/system/lookuptables/caches/${cacheName}/edit`,
-      },
-      DATA_ADAPTERS: {
-        OVERVIEW: '/system/lookuptables/data_adapters',
-        CREATE: '/system/lookuptables/data_adapters/create',
-        show: adapterName => `/system/lookuptables/data_adapter/${adapterName}`,
-        edit: adapterName => `/system/lookuptables/data_adapter/${adapterName}/edit`,
+        provider: (name) => `/system/authentication/config/${name}`,
       },
     },
   },
@@ -130,43 +98,20 @@ const Routes = {
     route.query(queryParams);
     return route.resource();
   },
-  _common_search_url: (resource, query, timeRange, resolution) => {
-    const route = new URI(resource);
-    const queryParams = {
-      q: query,
-      interval: resolution,
-    };
-
-    if (timeRange) {
-      Object.keys(timeRange).forEach((key) => {
-        queryParams[key] = timeRange[key];
-      });
-    }
-
-    route.query(queryParams);
-    return route.resource();
-  },
-  search: (query, timeRange, resolution) => {
-    return Routes._common_search_url(Routes.SEARCH, query, timeRange, resolution);
-  },
   message_show: (index, messageId) => `/messages/${index}/${messageId}`,
-  stream_edit: streamId => `/streams/${streamId}/edit`,
+  stream_edit: (streamId) => `/streams/${streamId}/edit`,
   stream_edit_example: (streamId, index, messageId) => `${Routes.stream_edit(streamId)}?index=${index}&message_id=${messageId}`,
-  stream_outputs: streamId => `/streams/${streamId}/outputs`,
-  stream_search: (streamId, query, timeRange, resolution) => {
-    return Routes._common_search_url(`${Routes.STREAMS}/${streamId}/search`, query, timeRange, resolution);
-  },
-  legacy_stream_search: streamId => `/streams/${streamId}/messages`,
+  stream_outputs: (streamId) => `/streams/${streamId}/outputs`,
+  stream_alerts: (streamId) => `/streams/${streamId}/alerts`,
+  stream_search: (streamId) => `/streams/${streamId}/search`,
+  legacy_stream_search: (streamId) => `/streams/${streamId}/messages`,
 
-  show_alert: alertId => `${Routes.ALERTS.LIST}/${alertId}`,
-  show_alert_condition: (streamId, conditionId) => `${Routes.ALERTS.CONDITIONS}/${streamId}/${conditionId}`,
+  dashboard_show: (dashboardId) => `/dashboards/${dashboardId}`,
 
-  dashboard_show: dashboardId => `/dashboards/${dashboardId}`,
+  node: (nodeId) => `/system/nodes/${nodeId}`,
 
-  node: nodeId => `/system/nodes/${nodeId}`,
-
-  node_inputs: nodeId => `${Routes.SYSTEM.INPUTS}/${nodeId}`,
-  global_input_extractors: inputId => `/system/inputs/${inputId}/extractors`,
+  node_inputs: (nodeId) => `${Routes.SYSTEM.INPUTS}/${nodeId}`,
+  global_input_extractors: (inputId) => `/system/inputs/${inputId}/extractors`,
   local_input_extractors: (nodeId, inputId) => `/system/inputs/${nodeId}/${inputId}/extractors`,
   export_extractors: (nodeId, inputId) => `${Routes.local_input_extractors(nodeId, inputId)}/export`,
   import_extractors: (nodeId, inputId) => `${Routes.local_input_extractors(nodeId, inputId)}/import`,
@@ -185,7 +130,7 @@ const Routes = {
   edit_extractor: (nodeId, inputId, extractorId) => `/system/inputs/${nodeId}/${inputId}/extractors/${extractorId}/edit`,
 
   edit_input_extractor: (nodeId, inputId, extractorId) => `/system/inputs/${nodeId}/${inputId}/extractors/${extractorId}/edit`,
-  getting_started: fromMenu => `${Routes.GETTING_STARTED}?menu=${fromMenu}`,
+  getting_started: (fromMenu) => `${Routes.GETTING_STARTED}?menu=${fromMenu}`,
   filtered_metrics: (nodeId, filter) => `${Routes.SYSTEM.METRICS(nodeId)}?filter=${filter}`,
 };
 
@@ -196,12 +141,12 @@ const qualifyUrls = (routes, appPrefix) => {
   Object.keys(routes).forEach((routeName) => {
     switch (typeof routes[routeName]) {
       case 'string':
-        qualifiedRoutes[routeName] = new URI(`${appPrefix}/${routes[routeName]}`).normalizePath().resource();
+        qualifiedRoutes[routeName] = `${appPrefix}${routes[routeName]}`;
         break;
       case 'function':
         qualifiedRoutes[routeName] = (...params) => {
           const result = routes[routeName](...params);
-          return new URI(`${appPrefix}/${result}`).normalizePath().resource();
+          return `${appPrefix}${result}`;
         };
         break;
       case 'object':

@@ -1,3 +1,7 @@
+/// <reference path="../../../declarations/jquery/jquery.d.ts" />
+/// <reference path="../../../declarations/node/node.d.ts" />
+/// <reference path='../../../node_modules/immutable/dist/immutable.d.ts'/>
+
 'use strict';
 
 import $ = require('jquery');
@@ -7,8 +11,6 @@ const Routes = require('routing/Routes');
 var Qs = require('qs');
 const URLUtils = require('util/URLUtils');
 const moment = require('moment');
-const history = require('util/History');
-const DateTime = require('logic/datetimes/DateTime');
 
 class SearchStore {
     static NOT_OPERATOR = "NOT";
@@ -84,10 +86,6 @@ class SearchStore {
         }
     }
 
-    /*
-     * This returns the current search query introduced in the search bar. Use "originalQuery()" if you need the
-     * query for the last executed search.
-     */
     get query(): string {
         return this._query;
     }
@@ -97,11 +95,6 @@ class SearchStore {
         if (this.onParamsChanged !== undefined) {
             this.onParamsChanged(this.getParams());
         }
-    }
-
-    get originalQuery(): string {
-        const query = this.originalSearch.get('query');
-        return (query.length > 0 ? query : '*');
     }
 
     get page(): number {
@@ -116,10 +109,6 @@ class SearchStore {
         }
     }
 
-    /*
-     * This returns the current range type introduced in the search bar. Use "originalRangeType()" if you need the
-     * range type for the last executed search.
-     */
     get rangeType(): string {
         return this._rangeType;
     }
@@ -133,14 +122,6 @@ class SearchStore {
         }
     }
 
-    get originalRangeType(): string {
-        return this.originalSearch.get('rangeType');
-    }
-
-    /*
-     * This returns the current range parameters introduced in the search bar. Use "originalRangeParams()" if you
-     * need the range parameters for the last executed search.
-     */
     get rangeParams(): Immutable.Map<string, any> {
         return this._rangeParams;
     }
@@ -150,10 +131,6 @@ class SearchStore {
         if (this.onParamsChanged !== undefined) {
             this.onParamsChanged(this.getParams());
         }
-    }
-
-    get originalRangeParams(): Immutable.Map<string, any> {
-        return this.originalSearch.get('rangeParams');
     }
 
     get resolution(): string {
@@ -226,80 +203,10 @@ class SearchStore {
         return originalSearch.set('rangeParams', rangeParams);
     }
 
-    appendToQueryString(query: string, field: string, value: any, operator: any) {
-      let effectiveValue = value;
-      if (field === 'timestamp') {
-        // when the timestamp comes from a quickvalues source, it is a unix timestamp with millis
-        // otherwise it is a datetime string in UTC (from a message list detail view)
-        if (isNaN(Number(value))) {
-          // convert back to UTC because DateTime always gives us the user timezone
-          const dateTime = new DateTime(value).toTimeZone('UTC');
-          // search expects UTC datetimes
-          effectiveValue = dateTime.toString(DateTime.Formats.TIMESTAMP);
-        } else {
-          // when this comes from quickvalues (stacked or not) the value is a unix millis timestamp and needs to be
-          // converted to a UTC datetime string for search
-          effectiveValue = new DateTime(new Date(Number(value))).toTimeZone('UTC').toString(DateTime.Formats.TIMESTAMP);
-        }
-      }
-      const term = `${field}:${SearchStore.escape(effectiveValue)}`;
-      const effectiveOperator = operator || SearchStore.AND_OPERATOR;
-      const newQuery = this.addQueryTerm(query, term, effectiveOperator);
-
-      return newQuery;
-    }
-
-    appendFieldQueryObjectToQueryString(query: string, fieldQueryObjects: Array<Array<{field: string, value: string}>>, operator: any) {
-      // We transform field query objects like
-      //   [
-      //     [
-      //       { field: 'a', value: 'foo' }
-      //       { field: 'b', value: 'bar' }
-      //     ],
-      //     [
-      //       { field: 'c', value: 'baz' }
-      //       { field: 'd', value: 'hey' }
-      //     ],
-      //   ]
-      //
-      // into a query string that looks like this:
-      //
-      //   "(a:foo AND b:bar) OR (c:baz AND d:hey)"
-      //
-      const newQuery = fieldQueryObjects.map((subquery) => {
-        const q = subquery.reduce((sq, o) => {
-          return this.appendToQueryString(sq, o.field, o.value, SearchStore.AND_OPERATOR);
-        }, '');
-
-        return `(${q})`;
-      }).join(` ${SearchStore.OR_OPERATOR} `);
-
-      if (query && query !== '' && query !== '*') {
-        return `${query} ${operator || SearchStore.AND_OPERATOR} (${newQuery})`;
-      } else {
-        return newQuery;
-      }
-    }
-
     addSearchTerm(field, value, operator) {
-        const newQuery = this.appendToQueryString(this.query, field, value, operator);
-
-        if (this.query !== newQuery) {
-          this.query = newQuery;
-          if (this.onAddQueryTerm !== undefined) {
-            this.onAddQueryTerm();
-          }
-        }
-    }
-
-    addSearchTermWithMapping(mapping, field, value, operator) {
-        if (!mapping[value]) {
-          return this.addSearchTerm(field, value, operator);
-        }
-
-        mapping[value].forEach((m) => {
-          this.addSearchTerm(m.field, m.value, operator);
-        });
+        const term = `${field}:${SearchStore.escape(value)}`;
+        const effectiveOperator = operator || SearchStore.AND_OPERATOR;
+        this.addQueryTerm(term, effectiveOperator);
     }
 
     changeTimeRange(newRangeType: string, newRangeParams: Object) {
@@ -332,7 +239,7 @@ class SearchStore {
         escapedTerm = escapedTerm.replace(/<br>/g, " ");
 
         if (this.isPhrase(escapedTerm)) {
-            escapedTerm = String(escapedTerm).replace(/(\"|\\)/g, '\\$&');
+            escapedTerm = String(escapedTerm).replace(/\"/g, '\\"');
             escapedTerm = '"' + escapedTerm + '"';
         } else {
             // Escape all lucene special characters from the source: && || : \ / + - ! ( ) { } [ ] ^ " ~ * ?
@@ -342,21 +249,24 @@ class SearchStore {
         return escapedTerm;
     }
 
-    queryContainsTerm(query: string, termInQuestion: string): boolean {
-        return query.indexOf(termInQuestion) != -1;
+    queryContainsTerm(termInQuestion: string): boolean {
+        return this.query.indexOf(termInQuestion) != -1;
     }
 
-    addQueryTerm(query: string, term: string, operator: string): string {
-        if (this.queryContainsTerm(query, term)) {
-            return query;
+    addQueryTerm(term: string, operator: string): string {
+        if (this.queryContainsTerm(term)) {
+            return;
         }
-        let newQuery = "";
-        if (typeof operator !== 'undefined' && query !== "" && query !== "*") {
-            newQuery = query + " " + operator + " ";
+        var newQuery = "";
+        if (typeof operator !== 'undefined' && this.query !== "" && this.query !== "*") {
+            newQuery = this.query + " " + operator + " ";
         }
         newQuery += term;
+        this.query = newQuery;
 
-        return newQuery;
+        if (this.onAddQueryTerm !== undefined) {
+            this.onAddQueryTerm();
+        }
     }
 
     getParams(): Object {
@@ -422,18 +332,20 @@ class SearchStore {
         var searchURLParams = this.getOriginalSearchURLParams();
         searchURLParams = searchURLParams.set("width", this.width);
         searchURLParams = searchURLParams.set(param, value);
-        this.executeSearch(this.searchBaseLocation("index") + "?" + Qs.stringify(searchURLParams.toJS()));
+        URLUtils.openLink(this.searchBaseLocation("index") + "?" + Qs.stringify(searchURLParams.toJS()), false);
     }
 
     _reloadSearchWithNewParams(newParams: Immutable.Map<string, any>) {
         var searchURLParams = this.getOriginalSearchURLParams();
         searchURLParams = searchURLParams.set("width", this.width);
         searchURLParams = searchURLParams.merge(newParams);
-        this.executeSearch(this.searchBaseLocation("index") + "?" + Qs.stringify(searchURLParams.toJS()));
+        URLUtils.openLink(this.searchBaseLocation("index") + "?" + Qs.stringify(searchURLParams.toJS()), false);
     }
 
-    executeSearch(url) {
-        history.push(url);
+    getCsvExportURL(): string {
+        var searchURLParams = this.getOriginalSearchURLParams();
+        searchURLParams = searchURLParams.delete('page');
+        return this.searchBaseLocation("exportAsCsv") + "?" + Qs.stringify(searchURLParams.toJS());
     }
 
     searchSurroundingMessages(messageId: string, fromTime: string, toTime: string, filter: any) {
@@ -441,7 +353,7 @@ class SearchStore {
 
       var query = Object.keys(filter)
         .filter((key) => filter[key])
-        .map((key) => `${key}:"${SearchStore.escape(filter[key])}"`)
+        .map((key) => `${key}:"${filter[key]}"`)
         .join(' AND ');
 
       var params = {
@@ -453,7 +365,7 @@ class SearchStore {
         fields: originalParams.fields,
       };
 
-      return this.searchBaseLocation('index') + '?' + Qs.stringify(params);
+      URLUtils.openLink(this.searchBaseLocation('index') + '?' + Qs.stringify(params))
     }
 }
 

@@ -16,14 +16,15 @@
  */
 package org.graylog2.plugin.inputs.util;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import org.graylog2.plugin.inputs.MessageInput;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PacketInformationDumper extends SimpleChannelInboundHandler<ByteBuf> {
+public class PacketInformationDumper extends SimpleChannelUpstreamHandler {
     private static final Logger LOG = LoggerFactory.getLogger(PacketInformationDumper.class);
     private final Logger sourceInputLog;
 
@@ -35,14 +36,19 @@ public class PacketInformationDumper extends SimpleChannelInboundHandler<ByteBuf
         sourceInputId = sourceInput.getId();
         sourceInputLog = LoggerFactory.getLogger(PacketInformationDumper.class.getCanonicalName() + "." + sourceInputId);
         LOG.debug("Set {} to TRACE for network packet metadata dumps of input {}", sourceInputLog.getName(),
-                sourceInput.getUniqueReadableId());
+                  sourceInput.getUniqueReadableId());
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-        if (sourceInputLog.isTraceEnabled()) {
-            sourceInputLog.trace("Recv network data: {} bytes via input '{}' <{}> from remote address {}",
-                    msg.readableBytes(), sourceInputName, sourceInputId, ctx.channel().remoteAddress());
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        try {
+            if (sourceInputLog.isTraceEnabled()) {
+                final ChannelBuffer message = (ChannelBuffer) e.getMessage();
+                sourceInputLog.trace("Recv network data: {} bytes via input '{}' <{}> from remote address {}",
+                          message.readableBytes(), sourceInputName, sourceInputId, e.getRemoteAddress());
+            }
+        } finally {
+            super.messageReceived(ctx, e);
         }
     }
 }

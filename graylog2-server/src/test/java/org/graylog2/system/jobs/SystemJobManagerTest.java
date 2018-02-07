@@ -19,21 +19,18 @@ package org.graylog2.system.jobs;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.graylog2.system.activities.SystemMessageActivityWriter;
-import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(MockitoJUnitRunner.class)
 public class SystemJobManagerTest {
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
-
     @Mock
     private SystemMessageActivityWriter systemMessageActivityWriter;
 
@@ -100,7 +97,7 @@ public class SystemJobManagerTest {
         assertEquals(1, manager.concurrentJobs(job1.getClass()));
     }
 
-    private static class LongRunningJob extends SystemJob {
+    class LongRunningJob extends SystemJob {
 
         private int seconds;
         private int maxConcurrency = 9001;
@@ -153,7 +150,7 @@ public class SystemJobManagerTest {
         }
     }
 
-    private static class AnotherLongRunningJob extends SystemJob {
+    class AnotherLongRunningJob extends SystemJob {
 
         private int seconds;
 

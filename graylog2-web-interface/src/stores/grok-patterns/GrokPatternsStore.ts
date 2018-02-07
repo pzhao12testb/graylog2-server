@@ -1,8 +1,7 @@
 const UserNotification = require("util/UserNotification");
 const URLUtils = require('util/URLUtils');
 
-const fetchDefault = require('logic/rest/FetchProvider').default;
-const fetchPlainText = require('logic/rest/FetchProvider').fetchPlainText;
+const fetch = require('logic/rest/FetchProvider').default;
 
 interface GrokPattern {
   id: string;
@@ -19,16 +18,13 @@ const GrokPatternsStore = {
         "Could not load Grok patterns");
     };
     // get the current list of patterns and sort it by name
-    fetchDefault('GET', this.URL).then(
-      (resp: any) => {
-        const patterns = resp.patterns;
-        patterns.sort((pattern1: GrokPattern, pattern2: GrokPattern) => {
-          return pattern1.name.toLowerCase().localeCompare(pattern2.name.toLowerCase());
-        });
-        callback(patterns);
-        return resp;
-      },
-      failCallback);
+    fetch('GET', this.URL).then((resp: any) => {
+      const patterns = resp.patterns;
+      patterns.sort((pattern1: GrokPattern, pattern2: GrokPattern) => {
+        return pattern1.name.toLowerCase().localeCompare(pattern2.name.toLowerCase());
+      });
+      callback(patterns);
+    }, failCallback);
   },
 
   savePattern(pattern: GrokPattern, callback: () => void) {
@@ -37,7 +33,7 @@ const GrokPatternsStore = {
         "Could not save Grok pattern");
     };
 
-    const requestPattern = {
+    const requestPatterb = {
       id: pattern.id,
       pattern: pattern.pattern,
       name: pattern.name,
@@ -52,17 +48,12 @@ const GrokPatternsStore = {
       url += '/' + pattern.id;
       method = 'PUT';
     }
-    fetchDefault(method, url, requestPattern)
-      .then(
-        response => {
-          callback();
-          const action = pattern.id === "" ? "created" : "updated";
-          const message = "Grok pattern \"" + pattern.name + "\" successfully " + action;
-          UserNotification.success(message);
-          return response;
-        },
-        failCallback
-      );
+    fetch(method, url, requestPatterb).then(() => {
+      callback();
+      var action = pattern.id === "" ? "created" : "updated";
+      var message = "Grok pattern \"" + pattern.name + "\" successfully " + action;
+      UserNotification.success(message);
+    }).catch(failCallback);
   },
 
   deletePattern(pattern: GrokPattern, callback: () => void) {
@@ -70,24 +61,19 @@ const GrokPatternsStore = {
       UserNotification.error("Deleting Grok pattern \"" + pattern.name + "\" failed with status: " + error.message,
         "Could not delete Grok pattern");
     };
-    fetchDefault('DELETE', this.URL + "/" + pattern.id)
-      .then(
-        response => {
-          callback();
-          UserNotification.success("Grok pattern \"" + pattern.name + "\" successfully deleted");
-          return response;
-        },
-        failCallback
-      );
+    fetch('DELETE', this.URL + "/" + pattern.id).then(() => {
+      callback();
+      UserNotification.success("Grok pattern \"" + pattern.name + "\" successfully deleted");
+    }).catch(failCallback);
   },
 
-  bulkImport(patterns: string, replaceAll: boolean) {
+  bulkImport(patterns: string[], replaceAll: boolean) {
     var failCallback = (error) => {
       UserNotification.error("Importing Grok pattern file failed with status: " + error.message,
         "Could not load Grok patterns");
     };
 
-    const promise = fetchPlainText('POST', `${this.URL}?replace=${replaceAll}`, patterns);
+    const promise = fetch('PUT', this.URL, {patterns: patterns});
 
     promise.catch(failCallback);
 

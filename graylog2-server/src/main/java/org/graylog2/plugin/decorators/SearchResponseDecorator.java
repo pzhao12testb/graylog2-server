@@ -17,7 +17,7 @@
 package org.graylog2.plugin.decorators;
 
 import org.graylog2.decorators.Decorator;
-import org.graylog2.plugin.DescriptorWithHumanName;
+import org.graylog2.plugin.AbstractDescriptor;
 import org.graylog2.plugin.configuration.ConfigurationRequest;
 import org.graylog2.rest.resources.search.responses.SearchResponse;
 
@@ -35,9 +35,20 @@ public interface SearchResponseDecorator extends Function<SearchResponse, Search
         ConfigurationRequest getRequestedConfiguration();
     }
 
-    abstract class Descriptor extends DescriptorWithHumanName {
+    abstract class Descriptor extends AbstractDescriptor {
+        private final String humanName;
+
+        protected Descriptor() {
+            throw new IllegalStateException("This class should not be instantiated directly, this is a bug.");
+        }
+
         public Descriptor(String name, String linkToDocs, String humanName) {
-            super(name, false, linkToDocs, humanName);
+            super(name, false, linkToDocs);
+            this.humanName = humanName;
+        }
+
+        public String getHumanName() {
+            return humanName;
         }
     }
 }

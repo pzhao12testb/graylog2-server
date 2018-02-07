@@ -1,10 +1,9 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import { LinkContainer } from 'react-router-bootstrap';
 import { Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import URI from 'urijs';
 
-import { ExternalLinkButton, IfPermitted } from 'components/common';
+import { IfPermitted } from 'components/common';
 
 import StoreProvider from 'injection/StoreProvider';
 const SystemProcessingStore = StoreProvider.getStore('SystemProcessing');
@@ -51,9 +50,9 @@ const NodesActions = React.createClass({
           <Button bsStyle="info">Metrics</Button>
         </LinkContainer>
 
-        <ExternalLinkButton bsStyle="info" href={apiBrowserURI}>
-          API browser
-        </ExternalLinkButton>
+        <Button bsStyle="info" href={apiBrowserURI} target="_blank">
+          <i className="fa fa-external-link"/>&nbsp; API browser
+        </Button>
 
         <DropdownButton title="More actions" id={`more-actions-dropdown-${this.props.node.node_id}`} pullRight>
           <IfPermitted permissions="processing:changestate">
@@ -78,7 +77,7 @@ const NodesActions = React.createClass({
 
           <IfPermitted permissions={['processing:changestate', 'lbstatus:change', 'node:shutdown']} anyPermissions>
             <IfPermitted permissions={['inputs:read', 'threads:dump']} anyPermissions>
-              <MenuItem divider />
+              <MenuItem divider/>
             </IfPermitted>
           </IfPermitted>
 

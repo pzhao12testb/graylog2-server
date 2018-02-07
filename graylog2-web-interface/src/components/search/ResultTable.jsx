@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import Immutable from 'immutable';
@@ -14,26 +13,17 @@ import { MessageTableEntry, MessageTablePaginator } from 'components/search';
 
 const ResultTable = React.createClass({
   propTypes: {
-    disableSurroundingSearch: PropTypes.bool,
-    highlight: PropTypes.bool.isRequired,
-    inputs: PropTypes.object.isRequired,
-    messages: PropTypes.array.isRequired,
-    nodes: PropTypes.object.isRequired,
-    onPageChange: PropTypes.func,
-    page: PropTypes.number.isRequired,
-    pageSize: PropTypes.number,
-    resultCount: PropTypes.number.isRequired,
-    selectedFields: PropTypes.object.isRequired,
-    sortField: PropTypes.string.isRequired,
-    sortOrder: PropTypes.string.isRequired,
-    streams: PropTypes.object.isRequired,
-    searchConfig: PropTypes.object.isRequired,
-  },
-  getDefaultProps() {
-    return {
-      disableSurroundingSearch: false,
-      onPageChange: (page) => { SearchStore.page = page; },
-    };
+    highlight: React.PropTypes.bool.isRequired,
+    inputs: React.PropTypes.object.isRequired,
+    messages: React.PropTypes.array.isRequired,
+    nodes: React.PropTypes.object.isRequired,
+    page: React.PropTypes.number.isRequired,
+    resultCount: React.PropTypes.number.isRequired,
+    selectedFields: React.PropTypes.object.isRequired,
+    sortField: React.PropTypes.string.isRequired,
+    sortOrder: React.PropTypes.string.isRequired,
+    streams: React.PropTypes.object.isRequired,
+    searchConfig: React.PropTypes.object.isRequired,
   },
   getInitialState() {
     return {
@@ -49,7 +39,7 @@ const ResultTable = React.createClass({
       return;
     }
     const promise = StreamsStore.listStreams();
-    promise.done(streams => this._onStreamsLoaded(streams));
+    promise.done((streams) => this._onStreamsLoaded(streams));
   },
   componentDidUpdate() {
     if (this.state.expandAllRenderAsync) {
@@ -88,7 +78,7 @@ const ResultTable = React.createClass({
     const expandedChangeRatio = (this.props.messages.length - this.state.expandedMessages.size) / 100;
     const renderLoadingIndicator = expandedChangeRatio > 0.3;
 
-    const newSet = Immutable.Set(this.props.messages.map(message => `${message.index}-${message.id}`));
+    const newSet = Immutable.Set(this.props.messages.map((message) => message.id));
     this.setState({ expandedMessages: newSet, expandAllRenderAsync: renderLoadingIndicator });
   },
   collapseAll() {
@@ -112,14 +102,14 @@ const ResultTable = React.createClass({
         sortLinks = (
           <span>
             <i className={`${classesDesc} sort-order-active`} />
-            <a href="#" onClick={e => this._handleSort(e, fieldName, 'asc')}><i className={classesAsc} /></a>
+            <a href="#" onClick={(e) => this._handleSort(e, fieldName, 'asc')}><i className={classesAsc} /></a>
           </span>
         );
       } else {
         sortLinks = (
           <span>
             <i className={`${classesAsc} sort-order-active`} />
-            <a href="#" onClick={e => this._handleSort(e, fieldName, 'desc')}><i className={classesDesc} /></a>
+            <a href="#" onClick={(e) => this._handleSort(e, fieldName, 'desc')}><i className={classesDesc} /></a>
           </span>
         );
       }
@@ -127,8 +117,8 @@ const ResultTable = React.createClass({
       // the given fieldname is not being sorted on
       sortLinks = (
         <span className="sort-order">
-          <a href="#" onClick={e => this._handleSort(e, fieldName, 'asc')}><i className={classesAsc} /></a>
-          <a href="#" onClick={e => this._handleSort(e, fieldName, 'desc')}><i className={classesDesc} /></a>
+          <a href="#" onClick={(e) => this._handleSort(e, fieldName, 'asc')}><i className={classesAsc} /></a>
+          <a href="#" onClick={(e) => this._handleSort(e, fieldName, 'desc')}><i className={classesDesc} /></a>
         </span>
       );
     }
@@ -148,10 +138,7 @@ const ResultTable = React.createClass({
                   disabled={this.state.expandedMessages.size === 0}><i className="fa fa-compress" /></Button>
         </ButtonGroup>
 
-        <MessageTablePaginator currentPage={Number(this.props.page)}
-                               onPageChange={this.props.onPageChange}
-                               pageSize={this.props.pageSize}
-                               position="top"
+        <MessageTablePaginator position="top" currentPage={Number(this.props.page)}
                                resultCount={this.props.resultCount} />
 
         <div className="search-results-table">
@@ -161,7 +148,7 @@ const ResultTable = React.createClass({
                 <thead>
                   <tr>
                     <th style={{ width: 180 }}>Timestamp {this._sortIcons('timestamp')}</th>
-                    {selectedColumns.toSeq().map((selectedFieldName) => {
+                    {selectedColumns.toSeq().map(selectedFieldName => {
                       return (
                         <th key={selectedFieldName}
                             style={this._columnStyle(selectedFieldName)}>
@@ -173,12 +160,11 @@ const ResultTable = React.createClass({
                 </thead>
                 {this.props.messages.map((message) => {
                   return (
-                    <MessageTableEntry key={`${message.index}-${message.id}`}
-                                       disableSurroundingSearch={this.props.disableSurroundingSearch}
+                    <MessageTableEntry key={message.id}
                                        message={message}
                                        showMessageRow={this.props.selectedFields.contains('message')}
                                        selectedFields={selectedColumns}
-                                       expanded={this.state.expandedMessages.contains(`${message.index}-${message.id}`)}
+                                       expanded={this.state.expandedMessages.contains(message.id)}
                                        toggleDetail={this._toggleMessageDetail}
                                        inputs={this.props.inputs}
                                        streams={this.props.streams}
@@ -196,10 +182,7 @@ const ResultTable = React.createClass({
           </div>
         </div>
 
-        <MessageTablePaginator currentPage={Number(this.props.page)}
-                               onPageChange={this.props.onPageChange}
-                               pageSize={this.props.pageSize}
-                               position="bottom"
+        <MessageTablePaginator position="bottom" currentPage={Number(this.props.page)}
                                resultCount={this.props.resultCount}>
           <ButtonGroup bsSize="small" className="pull-right" style={{ position: 'absolute', marginTop: 20, right: 10 }}>
             <Button title="Expand all messages" onClick={this.expandAll}><i className="fa fa-expand" /></Button>

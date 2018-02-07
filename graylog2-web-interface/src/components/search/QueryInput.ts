@@ -1,3 +1,6 @@
+/// <reference path="../../../declarations/bluebird/bluebird.d.ts" />
+/// <reference path="../../../declarations/typeahead/typeahead.d.ts" />
+
 'use strict';
 
 const StoreProvider = require('injection/StoreProvider');
@@ -145,7 +148,7 @@ class QueryInput {
         this.fields.forEach((field) => {
             possibleMatches.push(field + ":");
             possibleMatches.push("_exists_:" + field);
-            possibleMatches.push("NOT _exists_:" + field);
+            possibleMatches.push("_missing_:" + field);
         });
         return possibleMatches;
     }

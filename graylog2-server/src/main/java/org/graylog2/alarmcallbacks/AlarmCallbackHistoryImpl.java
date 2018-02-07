@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
-import org.graylog.autovalue.WithBeanGetter;
 import org.graylog2.alerts.Alert;
 import org.graylog2.database.CollectionName;
 import org.graylog2.plugin.Tools;
@@ -28,15 +27,13 @@ import org.graylog2.plugin.alarms.AlertCondition;
 import org.graylog2.rest.models.alarmcallbacks.AlarmCallbackResult;
 import org.graylog2.rest.models.alarmcallbacks.AlarmCallbackSummary;
 import org.joda.time.DateTime;
-import org.mongojack.Id;
 import org.mongojack.ObjectId;
 
 @AutoValue
-@WithBeanGetter
 @JsonAutoDetect
 @CollectionName("alarmcallbackhistory")
 public abstract class AlarmCallbackHistoryImpl implements AlarmCallbackHistory {
-    static final String FIELD_ID = "id";
+    static final String FIELD_ID = "_id";
     static final String FIELD_ALARMCALLBACKCONFIGURATION = "alarmcallbackconfiguration";
     static final String FIELD_ALERTID = "alert_id";
     static final String FIELD_ALERTCONDITIONID = "alertcondition_id";
@@ -44,7 +41,6 @@ public abstract class AlarmCallbackHistoryImpl implements AlarmCallbackHistory {
     static final String FIELD_CREATED_AT = "created_at";
 
     @JsonProperty(FIELD_ID)
-    @Id
     @ObjectId
     @Override
     public abstract String id();
@@ -70,7 +66,7 @@ public abstract class AlarmCallbackHistoryImpl implements AlarmCallbackHistory {
     public abstract DateTime createdAt();
 
     @JsonCreator
-    public static AlarmCallbackHistoryImpl create(@JsonProperty(FIELD_ID) @Id @ObjectId String id,
+    public static AlarmCallbackHistoryImpl create(@JsonProperty(FIELD_ID) String id,
                                               @JsonProperty(FIELD_ALARMCALLBACKCONFIGURATION) AlarmCallbackSummary alarmcallbackConfiguration,
                                               @JsonProperty(FIELD_ALERTID) String alertId,
                                               @JsonProperty(FIELD_ALERTCONDITIONID) String alertConditionId,
@@ -89,7 +85,6 @@ public abstract class AlarmCallbackHistoryImpl implements AlarmCallbackHistory {
                 alarmCallbackConfiguration.getId(),
                 alarmCallbackConfiguration.getStreamId(),
                 alarmCallbackConfiguration.getType(),
-                alarmCallbackConfiguration.getTitle(),
                 alarmCallbackConfiguration.getConfiguration(),
                 alarmCallbackConfiguration.getCreatedAt(),
                 alarmCallbackConfiguration.getCreatorUserId()

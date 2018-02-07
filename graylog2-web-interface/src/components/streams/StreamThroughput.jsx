@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import Reflux from 'reflux';
 
@@ -12,7 +11,7 @@ import { Spinner } from 'components/common';
 
 const StreamThroughput = React.createClass({
   propTypes: {
-    streamId: PropTypes.string.isRequired,
+    streamId: React.PropTypes.string.isRequired,
   },
   mixins: [Reflux.connect(MetricsStore)],
   componentWillMount() {
@@ -26,11 +25,11 @@ const StreamThroughput = React.createClass({
   },
   _calculateThroughput() {
     return Object.keys(this.state.metrics)
-      .map((nodeId) => {
+      .map(nodeId => {
         const metricDefinition = this.state.metrics[nodeId][this._metricName()];
         return metricDefinition !== undefined ? metricDefinition.metric.value : 0;
       })
-      .reduce((throughput1, throughput2) => throughput1 + throughput2, 0);
+      .reduce((throughput1, throughput2) => throughput1 + throughput2);
   },
   render() {
     if (!this.state.metrics) {
@@ -39,7 +38,8 @@ const StreamThroughput = React.createClass({
     return (
       <span>{this._calculateThroughput()} messages/second</span>
     );
-  },
+
+  }
 });
 
-export default StreamThroughput;
+module.exports = StreamThroughput;

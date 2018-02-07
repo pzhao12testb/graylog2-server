@@ -4,7 +4,7 @@ const NoopRetentionStrategySummary = React.createClass({
   render() {
     return (
       <div>
-        <dl>
+        <dl className="deflist">
           <dt>Index retention strategy:</dt>
           <dd>Do nothing</dd>
         </dl>

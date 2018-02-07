@@ -18,8 +18,8 @@ package org.graylog2.bundles;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.validator.constraints.NotBlank;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
@@ -44,8 +44,6 @@ public class Stream {
     @JsonProperty
     @NotNull
     private Set<String> outputs = Collections.emptySet();
-    @JsonProperty
-    private boolean defaultStream = false;
 
     public String getId() {
         return id;
@@ -101,13 +99,5 @@ public class Stream {
 
     public void setOutputs(Set<String> outputs) {
         this.outputs = outputs;
-    }
-
-    public boolean isDefaultStream() {
-        return defaultStream;
-    }
-
-    public void setDefaultStream(boolean defaultStream) {
-        this.defaultStream = defaultStream;
     }
 }

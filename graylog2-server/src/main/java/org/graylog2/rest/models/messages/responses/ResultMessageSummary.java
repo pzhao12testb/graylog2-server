@@ -22,13 +22,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Range;
-import org.graylog.autovalue.WithBeanGetter;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
 @AutoValue
-@WithBeanGetter
 @JsonAutoDetect
 public abstract class ResultMessageSummary {
     private static final String FIELD_HIGHLIGHT_RANGES = "highlight_ranges";

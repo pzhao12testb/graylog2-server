@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, { PropTypes } from 'react';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 
@@ -31,10 +30,6 @@ const StreamRulesEditor = React.createClass({
     this.loadData();
     StreamsStore.onChange(this.loadData);
     StreamRulesStore.onChange(this.loadData);
-  },
-  componentWillUnmount() {
-    StreamsStore.unregister(this.loadData);
-    StreamRulesStore.unregister(this.loadData);
   },
   onMessageLoaded(message) {
     this.setState({ message: message });
@@ -74,15 +69,17 @@ const StreamRulesEditor = React.createClass({
       if (this.state.matchData.matches) {
         return (
           <span>
-            <i className="fa fa-check" style={{ color: 'green' }} /> This message would be routed to this stream.
+            <i className="fa fa-check" style={{ color: 'green' }}/> This message would be routed to this stream.
+          </span>);
+      } else {
+        return (
+          <span>
+            <i className="fa fa-remove" style={{ color: 'red' }}/> This message would not be routed to this stream.
           </span>);
       }
-      return (
-        <span>
-          <i className="fa fa-remove" style={{ color: 'red' }} /> This message would not be routed to this stream.
-          </span>);
+    } else {
+      return ('Please load a message to check if it would match against these rules and therefore be routed into this stream.');
     }
-    return ('Please load a message to check if it would match against these rules and therefore be routed into this stream.');
   },
   render() {
     const styles = (this.state.matchData ? this._getListClassName(this.state.matchData) : 'info');
@@ -95,11 +92,11 @@ const StreamRulesEditor = React.createClass({
             </h2>
 
             <div className="stream-loader">
-              <LoaderTabs messageId={this.props.messageId} index={this.props.index} onMessageLoaded={this.onMessageLoaded} />
+              <LoaderTabs messageId={this.props.messageId} index={this.props.index} onMessageLoaded={this.onMessageLoaded}/>
             </div>
 
             <div className="spinner" style={{ display: 'none' }}><h2><i
-              className="fa fa-spinner fa-spin" /> &nbsp;Loading message</h2></div>
+              className="fa fa-spinner fa-spin"/> &nbsp;Loading message</h2></div>
 
             <div className="sample-message-display" style={{ display: 'none', marginTop: '5px' }}>
               <strong>Next step:</strong>
@@ -114,7 +111,7 @@ const StreamRulesEditor = React.createClass({
                 Add stream rule
               </button>
               <StreamRuleForm ref="newStreamRuleForm" title="New Stream Rule"
-                              streamRuleTypes={this.state.streamRuleTypes} onSubmit={this._onStreamRuleFormSubmit} />
+                              streamRuleTypes={this.state.streamRuleTypes} onSubmit={this._onStreamRuleFormSubmit}/>
             </div>
 
             <h2>
@@ -123,10 +120,10 @@ const StreamRulesEditor = React.createClass({
 
             {this._explainMatchResult()}
 
-            <MatchingTypeSwitcher stream={this.state.stream} onChange={this.loadData} />
+            <MatchingTypeSwitcher stream={this.state.stream} onChange={this.loadData}/>
             <Alert ref="well" bsStyle={styles}>
               <StreamRuleList stream={this.state.stream} streamRuleTypes={this.state.streamRuleTypes}
-                              permissions={this.props.currentUser.permissions} matchData={this.state.matchData} />
+                              permissions={this.props.currentUser.permissions} matchData={this.state.matchData}/>
             </Alert>
 
             <p style={{ marginTop: '10px' }}>
@@ -137,8 +134,9 @@ const StreamRulesEditor = React.createClass({
           </div>
         </div>
       );
+    } else {
+      return (<div className="row content"><div style={{ marginLeft: 10 }}><Spinner/></div></div>);
     }
-    return (<div className="row content"><div style={{ marginLeft: 10 }}><Spinner /></div></div>);
   },
 });
 

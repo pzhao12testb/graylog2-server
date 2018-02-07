@@ -1,51 +1,24 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import DataTableElement from './DataTableElement';
 import { TypeAheadDataFilter } from 'components/common';
 
-/**
- * Component that renders a data table, letting consumers of the component to
- * decide exactly how the data should be rendered. It optionally adds a filter
- * input to the data table by using the the `TypeAheadDataFilter` component.
- */
 const DataTable = React.createClass({
   propTypes: {
-    /** Adds a custom children element next to the data filter input. */
-    children: PropTypes.node,
-    /** Adds a custom class to the table element. */
-    className: PropTypes.string,
-    /** Adds a custom class to the row element. */
-    rowClassName: PropTypes.string,
-    /** Object key that should be used to display data in the data filter input. */
-    displayKey: PropTypes.string,
-    /**
-     * Function that renders a row in the table. It receives two arguments: the row, and its index.
-     * It usually returns a `<tr>` element with the formatted row.
-     */
-    dataRowFormatter: PropTypes.func.isRequired,
-    /** Label to use next to the suggestions for the data filter input. */
-    filterBy: PropTypes.string,
-    /** Label to use next to the data filter input. */
-    filterLabel: PropTypes.string.isRequired,
-    /** List of object keys to use as filter in the data filter input. Use an empty array to disable data filter. */
-    filterKeys: PropTypes.array.isRequired,
-    /** Array to use as suggestions in the data filter input. */
-    filterSuggestions: PropTypes.array,
-    /**
-     * Function that renders a single header cell in the table. It receives two arguments: the header, and its index.
-     * It usually returns a `<th>` element with the header.
-     */
-    headerCellFormatter: PropTypes.func.isRequired,
-    /** Array of values to be use as headers. The render is controlled by `headerCellFormatter`. */
-    headers: PropTypes.array.isRequired,
-    /** Element id to use in the table container */
-    id: PropTypes.string,
-    /** Text or element to show when there is no data. */
-    noDataText: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-    /** Array of objects to be rendered in the table. The render of those values is controlled by `dataRowFormatter`. */
-    rows: PropTypes.array.isRequired,
-    /** Object key to use to sort data table. */
-    sortByKey: PropTypes.string,
+    children: React.PropTypes.node,
+    className: React.PropTypes.string,
+    rowClassName: React.PropTypes.string,
+    displayKey: React.PropTypes.string,
+    dataRowFormatter: React.PropTypes.func.isRequired,
+    filterBy: React.PropTypes.string,
+    filterLabel: React.PropTypes.string.isRequired,
+    filterKeys: React.PropTypes.array.isRequired,
+    filterSuggestions: React.PropTypes.array,
+    headerCellFormatter: React.PropTypes.func.isRequired,
+    headers: React.PropTypes.array.isRequired,
+    id: React.PropTypes.string,
+    noDataText: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.node]),
+    rows: React.PropTypes.array.isRequired,
+    sortByKey: React.PropTypes.string,
   },
   getDefaultProps() {
     return {
@@ -104,8 +77,7 @@ const DataTable = React.createClass({
       filter = (
         <div className="row">
           <div className="col-md-8">
-            <TypeAheadDataFilter id={`${this.props.id}-data-filter`}
-                                 label={this.props.filterLabel}
+            <TypeAheadDataFilter label={this.props.filterLabel}
                                  data={this.state.rows}
                                  displayKey={this.props.displayKey}
                                  filterBy={this.props.filterBy}
@@ -129,10 +101,10 @@ const DataTable = React.createClass({
       data = (
         <table className={`table ${this.props.className}`}>
           <thead>
-            {this.getFormattedHeaders()}
+          {this.getFormattedHeaders()}
           </thead>
           <tbody>
-            {this.getFormattedDataRows()}
+          {this.getFormattedDataRows()}
           </tbody>
         </table>
       );

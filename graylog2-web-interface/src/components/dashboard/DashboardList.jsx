@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import Immutable from 'immutable';
 import { Alert } from 'react-bootstrap';
@@ -9,14 +8,14 @@ import PermissionsMixin from '../../util/PermissionsMixin';
 
 const DashboardList = React.createClass({
   propTypes: {
-    dashboards: PropTypes.instanceOf(Immutable.List),
-    onDashboardAdd: PropTypes.func,
-    permissions: PropTypes.arrayOf(PropTypes.string),
+    dashboards: React.PropTypes.instanceOf(Immutable.List),
+    onDashboardAdd: React.PropTypes.func,
+    permissions: React.PropTypes.arrayOf(React.PropTypes.string),
   },
   mixins: [PermissionsMixin],
   _formatDashboard(dashboard) {
     return (
-      <Dashboard key={`dashboard-${dashboard.id}`} dashboard={dashboard} permissions={this.props.permissions} />
+      <Dashboard key={`dashboard-${dashboard.id}`} dashboard={dashboard} permissions={this.props.permissions}/>
     );
   },
   render() {
@@ -36,13 +35,13 @@ const DashboardList = React.createClass({
       }
       return (
         <Alert bsStyle="warning">
-          <i className="fa fa-info-circle" />&nbsp;
+          <i className="fa fa-info-circle"></i>&nbsp;
           No dashboards configured. {createDashboardButton}
         </Alert>
       );
     }
 
-    const dashboardList = this.props.dashboards.sortBy(dashboard => dashboard.title).map(this._formatDashboard);
+    const dashboardList = this.props.dashboards.sortBy((dashboard) => dashboard.title).map(this._formatDashboard);
 
     return (
       <ul className="streams">

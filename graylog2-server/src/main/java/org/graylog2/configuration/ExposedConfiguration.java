@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
-import org.graylog.autovalue.WithBeanGetter;
 import org.graylog2.Configuration;
 
 /**
@@ -30,7 +29,6 @@ import org.graylog2.Configuration;
  */
 @JsonAutoDetect
 @AutoValue
-@WithBeanGetter
 public abstract class ExposedConfiguration {
     @JsonProperty("inputbuffer_processors")
     public abstract int inputBufferProcessors();
@@ -65,6 +63,12 @@ public abstract class ExposedConfiguration {
     @JsonProperty("allow_leading_wildcard_searches")
     public abstract boolean allowLeadingWildcardSearches();
 
+    @JsonProperty("elasticsearch_shards")
+    public abstract int shards();
+
+    @JsonProperty("elasticsearch_replicas")
+    public abstract int replicas();
+
     @JsonProperty("stream_processing_timeout")
     public abstract long streamProcessingTimeout();
 
@@ -77,10 +81,16 @@ public abstract class ExposedConfiguration {
     @JsonProperty("stale_master_timeout")
     public abstract int staleMasterTimeout();
 
+    @JsonProperty("disable_index_optimization")
+    public abstract boolean disableIndexOptimization();
+
+    @JsonProperty("index_optimization_max_num_segments")
+    public abstract int indexOptimizationMaxSegments();
+
     @JsonProperty("gc_warning_threshold")
     public abstract String gcWarningThreshold();
 
-    public static ExposedConfiguration create(Configuration configuration) {
+    public static ExposedConfiguration create(Configuration configuration, ElasticsearchConfiguration esConfiguration) {
         return create(
                 configuration.getInputbufferProcessors(),
                 configuration.getProcessBufferProcessors(),
@@ -93,10 +103,14 @@ public abstract class ExposedConfiguration {
                 configuration.getNodeIdFile(),
                 configuration.isAllowHighlighting(),
                 configuration.isAllowLeadingWildcardSearches(),
+                esConfiguration.getShards(),
+                esConfiguration.getReplicas(),
                 configuration.getStreamProcessingTimeout(),
                 configuration.getStreamProcessingMaxFaults(),
                 configuration.getOutputModuleTimeout(),
                 configuration.getStaleMasterTimeout(),
+                esConfiguration.isDisableIndexOptimization(),
+                esConfiguration.getIndexOptimizationMaxNumSegments(),
                 configuration.getGcWarningThreshold().toString());
     }
 
@@ -113,10 +127,14 @@ public abstract class ExposedConfiguration {
             @JsonProperty("node_id_file") String nodeIdFile,
             @JsonProperty("allow_highlighting") boolean allowHighlighting,
             @JsonProperty("allow_leading_wildcard_searches") boolean allowLeadingWildcardSearches,
+            @JsonProperty("elasticsearch_shards") int shards,
+            @JsonProperty("elasticsearch_replicas") int replicas,
             @JsonProperty("stream_processing_timeout") long streamProcessingTimeout,
             @JsonProperty("stream_processing_max_faults") int streamProcessingMaxFaults,
             @JsonProperty("output_module_timeout") long outputModuleTimeout,
             @JsonProperty("stale_master_timeout") int staleMasterTimeout,
+            @JsonProperty("disable_index_optimization") boolean disableIndexOptimization,
+            @JsonProperty("index_optimization_max_num_segments") int indexOptimizationMaxSegments,
             @JsonProperty("gc_warning_threshold") String gcWarningThreshold) {
         return new AutoValue_ExposedConfiguration(
                 inputBufferProcessors,
@@ -130,10 +148,14 @@ public abstract class ExposedConfiguration {
                 nodeIdFile,
                 allowHighlighting,
                 allowLeadingWildcardSearches,
+                shards,
+                replicas,
                 streamProcessingTimeout,
                 streamProcessingMaxFaults,
                 outputModuleTimeout,
                 staleMasterTimeout,
+                disableIndexOptimization,
+                indexOptimizationMaxSegments,
                 gcWarningThreshold);
     }
 

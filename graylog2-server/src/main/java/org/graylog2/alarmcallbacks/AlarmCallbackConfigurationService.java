@@ -24,7 +24,7 @@ import org.graylog2.rest.models.alarmcallbacks.requests.CreateAlarmCallbackReque
 import java.util.List;
 import java.util.Map;
 
-@ImplementedBy(AlarmCallbackConfigurationServiceImpl.class)
+@ImplementedBy(AlarmCallbackConfigurationServiceMJImpl.class)
 public interface AlarmCallbackConfigurationService {
     List<AlarmCallbackConfiguration> getForStreamId(String streamId);
     List<AlarmCallbackConfiguration> getForStream(Stream stream);

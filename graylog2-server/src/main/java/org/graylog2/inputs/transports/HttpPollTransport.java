@@ -160,7 +160,9 @@ public class HttpPollTransport extends ThrottleableTransport {
                     .url(url)
                     .headers(Headers.of(headers));
 
-            try (final Response r = httpClient.newCall(requestBuilder.build()).execute()) {
+            try {
+                final Response r = httpClient.newCall(requestBuilder.build()).execute();
+
                 if (!r.isSuccessful()) {
                     throw new RuntimeException("Expected successful HTTP status code [2xx], got " + r.code());
                 }

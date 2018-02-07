@@ -16,6 +16,8 @@
  */
 package org.graylog2.events;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import java.util.Objects;
 
 public class SimpleEvent {

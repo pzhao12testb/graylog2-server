@@ -19,7 +19,8 @@ package org.graylog2.plugin;
 import java.io.Closeable;
 
 public interface RulesEngine {
-    interface RulesSession extends Closeable {
+
+    public interface RulesSession extends Closeable {
 
         int evaluate(Message message, boolean retractFacts);
 

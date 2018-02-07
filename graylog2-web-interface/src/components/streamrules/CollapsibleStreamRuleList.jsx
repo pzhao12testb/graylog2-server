@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Alert, Collapse } from 'react-bootstrap';
 
@@ -6,9 +5,9 @@ import StreamRuleList from 'components/streamrules//StreamRuleList';
 
 const CollapsibleStreamRuleList = React.createClass({
   propTypes: {
-    permissions: PropTypes.array.isRequired,
-    stream: PropTypes.object.isRequired,
-    streamRuleTypes: PropTypes.array.isRequired,
+    permissions: React.PropTypes.array.isRequired,
+    stream: React.PropTypes.object.isRequired,
+    streamRuleTypes: React.PropTypes.array.isRequired,
   },
   getInitialState() {
     return {

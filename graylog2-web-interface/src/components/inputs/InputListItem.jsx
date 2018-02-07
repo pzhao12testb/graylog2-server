@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, { PropTypes } from 'react';
 import Reflux from 'reflux';
 import { Button, DropdownButton, MenuItem, Col } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
@@ -61,9 +60,9 @@ const InputListItem = React.createClass({
     if (this.isPermitted(this.props.permissions, ['searches:relative'])) {
       actions.push(
         <LinkContainer key={`received-messages-${this.props.input.id}`}
-                       to={Routes.search(`gl2_source_input:${this.props.input.id}`, { relative: 0 })}>
+                       to={Routes.search_with_query(`gl2_source_input:${this.props.input.id}`, 'relative', 28800)}>
           <Button bsStyle="info">Show received messages</Button>
-        </LinkContainer>,
+        </LinkContainer>
       );
     }
 
@@ -79,10 +78,10 @@ const InputListItem = React.createClass({
       actions.push(
         <LinkContainer key={`manage-extractors-${this.props.input.id}`} to={extractorRoute}>
           <Button bsStyle="info">Manage extractors</Button>
-        </LinkContainer>,
+        </LinkContainer>
       );
 
-      actions.push(<InputStateControl key={`input-state-control-${this.props.input.id}`} input={this.props.input} />);
+      actions.push(<InputStateControl key={`input-state-control-${this.props.input.id}`} input={this.props.input}/>);
     }
 
     let showMetricsMenuItem;
@@ -114,12 +113,12 @@ const InputListItem = React.createClass({
         </IfPermitted>
 
         <IfPermitted permissions="inputs:terminate">
-          <MenuItem key={`divider-${this.props.input.id}`} divider />
+          <MenuItem key={`divider-${this.props.input.id}`} divider/>
         </IfPermitted>
         <IfPermitted permissions="inputs:terminate">
           <MenuItem key={`delete-input-${this.props.input.id}`} onSelect={this._deleteInput}>Delete input</MenuItem>
         </IfPermitted>
-      </DropdownButton>,
+      </DropdownButton>
     );
 
     let subtitle;
@@ -127,19 +126,19 @@ const InputListItem = React.createClass({
     if (!this.props.input.global && this.props.input.node) {
       subtitle = (
         <span>
-          On node{' '}<LinkToNode nodeId={this.props.input.node} />
+          On node{' '}<LinkToNode nodeId={this.props.input.node}/>
         </span>
       );
     }
 
     const inputForm = definition ?
-      (<InputForm ref="configurationForm" key={`edit-form-input-${input.id}`}
+        <InputForm ref="configurationForm" key={`edit-form-input-${input.id}`}
                    globalValue={input.global} nodeValue={input.node}
                    configFields={definition.requested_configuration}
                    title={`Editing Input ${input.title}`}
                    titleValue={input.title}
                    typeName={input.type} includeTitleField
-                   submitAction={this._updateInput} values={input.attributes} />) : null;
+                   submitAction={this._updateInput} values={input.attributes} /> : null;
 
     const additionalContent = (
       <div>
@@ -147,9 +146,9 @@ const InputListItem = React.createClass({
           <ConfigurationWell className="configuration-well"
                              id={input.id}
                              configuration={input.attributes}
-                             typeDefinition={definition || {}} />
-          <StaticFieldForm ref="staticFieldForm" input={this.props.input} />
-          <InputStaticFields input={this.props.input} />
+                             typeDefinition={definition || {}}/>
+          <StaticFieldForm ref="staticFieldForm" input={this.props.input}/>
+          <InputStaticFields input={this.props.input}/>
         </Col>
         <Col md={4}>
           <InputThroughput input={input} />
@@ -165,7 +164,7 @@ const InputListItem = React.createClass({
                       description={subtitle}
                       createdFromContentPack={!!this.props.input.content_pack}
                       actions={actions}
-                      contentRow={additionalContent} />
+                      contentRow={additionalContent}/>
     );
   },
 });

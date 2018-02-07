@@ -17,12 +17,14 @@
 package org.graylog2.alerts.types;
 
 import org.graylog2.alerts.AlertConditionTest;
-import org.graylog2.indexer.FieldTypeException;
+import org.graylog2.indexer.InvalidRangeFormatException;
 import org.graylog2.indexer.results.FieldStatsResult;
+import org.graylog2.indexer.searches.Searches;
 import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.alarms.AlertCondition;
 import org.graylog2.plugin.indexer.searches.timeranges.RelativeRange;
 import org.junit.Test;
+import org.mockito.Matchers;
 
 import java.util.Map;
 
@@ -30,7 +32,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,8 +63,9 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
                 alertConditionTitle);
 
             fieldStatsShouldReturn(getFieldStatsResult(checkType, higherThanThreshold));
+            alertLastTriggered(-1);
 
-            AlertCondition.CheckResult result = fieldValueAlertCondition.runCheck();
+            AlertCondition.CheckResult result = alertService.triggered(fieldValueAlertCondition);
 
             assertTriggered(fieldValueAlertCondition, result);
         }
@@ -80,8 +82,9 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
                 alertConditionTitle);
 
             fieldStatsShouldReturn(getFieldStatsResult(checkType, lowerThanThreshold));
+            alertLastTriggered(-1);
 
-            AlertCondition.CheckResult result = fieldValueAlertCondition.runCheck();
+            AlertCondition.CheckResult result = alertService.triggered(fieldValueAlertCondition);
 
             assertNotTriggered(result);
         }
@@ -98,8 +101,9 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
                 alertConditionTitle);
 
             fieldStatsShouldReturn(getFieldStatsResult(checkType, lowerThanThreshold));
+            alertLastTriggered(-1);
 
-            AlertCondition.CheckResult result = fieldValueAlertCondition.runCheck();
+            AlertCondition.CheckResult result = alertService.triggered(fieldValueAlertCondition);
 
             assertTriggered(fieldValueAlertCondition, result);
         }
@@ -116,19 +120,20 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
                 alertConditionTitle);
 
             fieldStatsShouldReturn(getFieldStatsResult(checkType, higherThanThreshold));
+            alertLastTriggered(-1);
 
-            AlertCondition.CheckResult result = fieldValueAlertCondition.runCheck();
+            AlertCondition.CheckResult result = alertService.triggered(fieldValueAlertCondition);
 
             assertNotTriggered(result);
         }
     }
 
-    private Map<String, Object> getParametersMap(Integer grace,
-                                                 Integer time,
-                                                 FieldValueAlertCondition.ThresholdType threshold_type,
-                                                 FieldValueAlertCondition.CheckType check_type,
-                                                 Number threshold,
-                                                 String field) {
+    protected Map<String, Object> getParametersMap(Integer grace,
+                                                   Integer time,
+                                                   FieldValueAlertCondition.ThresholdType threshold_type,
+                                                   FieldValueAlertCondition.CheckType check_type,
+                                                   Number threshold,
+                                                   String field) {
         Map<String, Object> parameters = super.getParametersMap(grace, time, threshold);
         parameters.put("threshold_type", threshold_type.toString());
         parameters.put("field", field);
@@ -137,7 +142,7 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
         return parameters;
     }
 
-    private FieldValueAlertCondition getFieldValueAlertCondition(Map<String, Object> parameters, String title) {
+    protected FieldValueAlertCondition getFieldValueAlertCondition(Map<String, Object> parameters, String title) {
         return new FieldValueAlertCondition(
             searches,
             stream,
@@ -148,21 +153,21 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
             title);
     }
 
-    private void fieldStatsShouldReturn(FieldStatsResult fieldStatsResult) {
+    protected void fieldStatsShouldReturn(FieldStatsResult fieldStatsResult) {
         try {
             when(searches.fieldStats(anyString(),
-                eq("*"),
+                Matchers.eq("*"),
                 anyString(),
                 any(RelativeRange.class),
                 anyBoolean(),
                 anyBoolean(),
                 anyBoolean())).thenReturn(fieldStatsResult);
-        } catch (FieldTypeException e) {
+        } catch (InvalidRangeFormatException | Searches.FieldTypeException e) {
             assertNotNull("This should not return an exception!", e);
         }
     }
 
-    private FieldStatsResult getFieldStatsResult(FieldValueAlertCondition.CheckType type, Number retValue) {
+    protected FieldStatsResult getFieldStatsResult(FieldValueAlertCondition.CheckType type, Number retValue) {
         final Double value = (Double) retValue;
         final FieldStatsResult fieldStatsResult = mock(FieldStatsResult.class);
 
@@ -171,19 +176,14 @@ public class FieldValueAlertConditionTest extends AlertConditionTest {
         switch (type) {
             case MIN:
                 when(fieldStatsResult.getMin()).thenReturn(value);
-                break;
             case MAX:
                 when(fieldStatsResult.getMax()).thenReturn(value);
-                break;
             case MEAN:
                 when(fieldStatsResult.getMean()).thenReturn(value);
-                break;
             case STDDEV:
                 when(fieldStatsResult.getStdDeviation()).thenReturn(value);
-                break;
             case SUM:
                 when(fieldStatsResult.getSum()).thenReturn(value);
-                break;
         }
         return fieldStatsResult;
     }

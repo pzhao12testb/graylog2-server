@@ -1,12 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import DocsHelper from 'util/DocsHelper';
 
 const DocumentationLink = React.createClass({
   propTypes: {
-    page: PropTypes.string.isRequired,
-    text: PropTypes.node.isRequired,
-    title: PropTypes.string,
+    page: React.PropTypes.string.isRequired,
+    text: React.PropTypes.node.isRequired,
+    title: React.PropTypes.string,
   },
   render() {
     return (

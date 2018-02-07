@@ -1,21 +1,26 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { Label } from 'react-bootstrap';
+import React, {PropTypes} from 'react';
 
 const StreamStateBadge = React.createClass({
   propTypes: {
+    onClick: PropTypes.func.isRequired,
     stream: PropTypes.object.isRequired,
   },
-  render() {
-    if (this.props.stream.is_default) {
-      return <Label bsStyle="primary">Default</Label>;
+  _onClick() {
+    if (typeof this.props.onClick === 'function') {
+      this.props.onClick(this.props.stream);
     }
-
+  },
+  render() {
     if (!this.props.stream.disabled) {
       return null;
     }
 
-    return <Label bsStyle="warning">Stopped</Label>;
+    return (
+      <span className="badge alert-danger stream-stopped" onClick={this._onClick} title="Click here to start the stream"
+            style={{marginLeft: 5, cursor: 'pointer'}}>
+        stopped
+      </span>
+    );
   },
 });
 

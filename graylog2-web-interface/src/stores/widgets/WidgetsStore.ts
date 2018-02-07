@@ -1,9 +1,11 @@
+/// <reference path="../../../declarations/bluebird/bluebird.d.ts" />
+
 const Reflux = require('reflux');
 
 const UserNotification = require('util/UserNotification');
 import ApiRoutes = require('routing/ApiRoutes');
 const URLUtils = require('util/URLUtils');
-const fetchPeriodically = require('logic/rest/FetchProvider').fetchPeriodically;
+const Builder = require('logic/rest/FetchProvider').Builder;
 const fetch = require('logic/rest/FetchProvider').default;
 
 const ActionsProvider = require('injection/ActionsProvider');
@@ -35,24 +37,24 @@ const WidgetsStore = Reflux.createStore({
         var url = URLUtils.qualifyUrl(ApiRoutes.DashboardsApiController.addWidget(dashboardId).url);
         var promise = fetch('POST', url, widgetData);
 
-        promise.then(
-          response => {
-              UserNotification.success("Widget created successfully");
-              return response;
-          },
-          error => {
-              if (error.additional.status !== 404) {
-                  UserNotification.error("Creating widget failed with status: " + error,
+        promise.then(() => UserNotification.success("Widget created successfully"),
+        (error) => {
+            if (error.additional.status !== 404) {
+                UserNotification.error("Creating widget failed with status: " + error,
                     "Could not create widget");
-              }
-          });
+            }
+        });
 
         return promise;
     },
 
     loadWidget(dashboardId: string, widgetId: string): Promise<string[]> {
         var url = URLUtils.qualifyUrl(ApiRoutes.DashboardsApiController.widget(dashboardId, widgetId).url);
-        const promise = fetchPeriodically('GET', url);
+        const promise = new Builder('GET', url)
+            .authenticated()
+            .setHeader('X-Graylog-No-Session-Extension', 'true')
+            .json()
+            .build();
 
         promise.catch((error) => {
             if (error.additional.status !== 404) {
@@ -68,11 +70,8 @@ const WidgetsStore = Reflux.createStore({
         var promise = fetch('PUT', url, this._serializeWidgetForUpdate(widget));
 
         promise.then(
-          response => {
-              UserNotification.success("Widget updated successfully");
-              return response;
-          },
-          error => {
+          () => UserNotification.success("Widget updated successfully"),
+          (error) => {
               UserNotification.error("Updating widget \"" + widget.description + "\" failed with status: " + error.message,
                 "Could not update widget");
           }
@@ -84,15 +83,18 @@ const WidgetsStore = Reflux.createStore({
     loadValue(dashboardId: string, widgetId: string, resolution: number): Promise<string[]> {
         var url = URLUtils.qualifyUrl(ApiRoutes.DashboardsApiController.widgetValue(dashboardId, widgetId, resolution).url);
 
-        return fetchPeriodically('GET', url);
+        return new Builder('GET', url)
+            .authenticated()
+            .setHeader('X-Graylog-No-Session-Extension', 'true')
+            .json()
+            .build();
     },
 
     removeWidget(dashboardId: string, widgetId: string): Promise<string[]> {
         const url = URLUtils.qualifyUrl(ApiRoutes.DashboardsApiController.removeWidget(dashboardId, widgetId).url);
 
-        const promise = fetch('DELETE', url).then(response => {
+        const promise = fetch('DELETE', url).then(() => {
             this.trigger({delete: widgetId});
-            return response;
         });
         WidgetsActions.removeWidget.promise(promise);
 

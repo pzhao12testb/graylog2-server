@@ -1,19 +1,16 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Button } from 'react-bootstrap';
-import { Timestamp } from 'components/common';
 
 const WidgetFooter = React.createClass({
   propTypes: {
-    locked: PropTypes.bool.isRequired,
-    onDelete: PropTypes.func.isRequired,
-    onEditConfig: PropTypes.func.isRequired,
-    onShowConfig: PropTypes.func.isRequired,
-    replayHref: PropTypes.string.isRequired,
-    error: PropTypes.any,
-    errorMessage: PropTypes.string,
-    calculatedAt: PropTypes.string,
-    replayDisabled: PropTypes.bool,
+    locked: React.PropTypes.bool.isRequired,
+    onDelete: React.PropTypes.func.isRequired,
+    onEditConfig: React.PropTypes.func.isRequired,
+    onReplaySearch: React.PropTypes.func.isRequired,
+    onShowConfig: React.PropTypes.func.isRequired,
+  },
+  _replaySearch(e) {
+    e.preventDefault();
+    this.props.onReplaySearch(e);
   },
   _showConfig(e) {
     e.preventDefault();
@@ -28,38 +25,21 @@ const WidgetFooter = React.createClass({
     this.props.onDelete();
   },
   render() {
-    let loadErrorElement;
-
-    if (this.props.error) {
-      loadErrorElement = (
-        <span className="load-error" title={this.props.errorMessage}>
-          <i className="fa fa-exclamation-triangle" />
-        </span>
-      );
-    }
-
-    let calculatedAtTime;
-
-    if (this.props.calculatedAt) {
-      calculatedAtTime = <span title={this.props.calculatedAt}><Timestamp dateTime={this.props.calculatedAt} relative /></span>;
-    } else {
-      calculatedAtTime = 'Loading...';
-    }
-
-    const replay = this.props.replayDisabled ? null : (
-      <div className="widget-replay">
-        <Button bsStyle="link" className="btn-text" title="Replay search" href={this.props.replayHref}>
-          <i className="fa fa-play" />
-        </Button>
-      </div>
-    );
     const lockedActions = (
       <div className="actions">
-        {replay}
+        <div className="widget-replay">
+          <button className="btn btn-mini btn-link btn-text"
+                  title="Replay search"
+                  onClick={this._replaySearch}>
+            <i className="fa fa-play"/>
+          </button>
+        </div>
         <div className="widget-info">
-          <Button bsStyle="link" className="btn-text" title="Show widget configuration" onClick={this._showConfig}>
-            <i className="fa fa-info-circle" />
-          </Button>
+          <button className="btn btn-mini btn-link btn-text"
+                  title="Show widget configuration"
+                  onClick={this._showConfig}>
+            <i className="fa fa-info-circle"/>
+          </button>
         </div>
       </div>
     );
@@ -67,27 +47,25 @@ const WidgetFooter = React.createClass({
     const unlockedActions = (
       <div className="actions">
         <div className="widget-delete">
-          <Button bsStyle="link" className="btn-text" title="Delete widget" onClick={this._delete}>
-            <i className="fa fa-trash" />
-          </Button>
+          <button className="btn btn-mini btn-link btn-text"
+                  title="Delete widget"
+                  onClick={this._delete}>
+            <i className="fa fa-trash"/>
+          </button>
         </div>
         <div className="widget-edit">
-          <Button bsStyle="link" className="btn-text" title="Edit widget" onClick={this._editConfig}>
-            <i className="fa fa-pencil" />
-          </Button>
+          <button className="btn btn-mini btn-link btn-text"
+                  title="Edit widget"
+                  onClick={this._editConfig}>
+            <i className="fa fa-pencil"/>
+          </button>
         </div>
       </div>
     );
 
     return (
       <div>
-        <div className="widget-update-info">
-          {loadErrorElement}
-          {calculatedAtTime}
-        </div>
-        <div>
-          {this.props.locked ? lockedActions : unlockedActions}
-        </div>
+        {this.props.locked ? lockedActions : unlockedActions}
       </div>
     );
   },

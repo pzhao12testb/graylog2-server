@@ -28,14 +28,15 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.SortedSet;
 
 import static com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb.InMemoryMongoRuleBuilder.newInMemoryMongoDbRule;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RunWith(MockitoJUnitRunner.class)
 public class LegacyMongoIndexRangeServiceTest {
     @ClassRule
     public static final InMemoryMongoDb IN_MEMORY_MONGO_DB = newInMemoryMongoDbRule().build();
@@ -43,8 +44,6 @@ public class LegacyMongoIndexRangeServiceTest {
 
     @Rule
     public MongoConnectionRule mongoRule = MongoConnectionRule.build("test");
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     private LegacyMongoIndexRangeService indexRangeService;
 

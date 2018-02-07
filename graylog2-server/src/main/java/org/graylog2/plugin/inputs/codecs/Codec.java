@@ -37,20 +37,20 @@ public interface Codec {
     @Nonnull
     Configuration getConfiguration();
 
-    interface Factory<C> {
+    public interface Factory<C> {
         C create(Configuration configuration);
         Config getConfig();
         Descriptor getDescriptor();
     }
 
-    interface Config {
-        String CK_OVERRIDE_SOURCE = "override_source";
+    public interface Config {
+        public static final String CK_OVERRIDE_SOURCE = "override_source";
 
         ConfigurationRequest getRequestedConfiguration();
         void overrideDefaultValues(@Nonnull ConfigurationRequest cr);
     }
 
-    class Descriptor extends AbstractDescriptor {
+    public static class Descriptor extends AbstractDescriptor {
         public Descriptor() {
             // We ensure old Codec plugins remain compatible by setting an empty name in here
             this("");

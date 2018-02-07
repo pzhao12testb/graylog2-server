@@ -19,8 +19,6 @@ package org.graylog2.streams;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.graylog2.indexer.indexset.events.IndexSetCreatedEvent;
-import org.graylog2.indexer.indexset.events.IndexSetDeletedEvent;
 import org.graylog2.plugin.Message;
 import org.graylog2.plugin.ServerStatus;
 import org.graylog2.plugin.streams.Stream;
@@ -43,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class StreamRouter {
     private static final Logger LOG = LoggerFactory.getLogger(StreamRouter.class);
 
+    protected final StreamService streamService;
     private final ServerStatus serverStatus;
     private final ScheduledExecutorService scheduler;
 
@@ -55,6 +54,7 @@ public class StreamRouter {
                         StreamRouterEngine.Factory routerEngineFactory,
                         EventBus serverEventBus,
                         @Named("daemonScheduler") ScheduledExecutorService scheduler) {
+        this.streamService = streamService;
         this.serverStatus = serverStatus;
         this.scheduler = scheduler;
 
@@ -68,18 +68,6 @@ public class StreamRouter {
     @Subscribe
     @SuppressWarnings("unused")
     public void handleStreamsUpdate(StreamsChangedEvent event) {
-        scheduler.submit(engineUpdater);
-    }
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void handleIndexSetCreation(IndexSetCreatedEvent event) {
-        scheduler.submit(engineUpdater);
-    }
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void handleIndexSetDeletion(IndexSetDeletedEvent event) {
         scheduler.submit(engineUpdater);
     }
 

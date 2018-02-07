@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import org.graylog2.dashboards.widgets.InvalidWidgetConfigurationException;
-import org.graylog2.indexer.FieldTypeException;
 import org.graylog2.indexer.results.HistogramResult;
 import org.graylog2.indexer.searches.Searches;
 import org.graylog2.plugin.dashboards.widgets.ComputationResult;
@@ -90,44 +89,28 @@ public class StackedChartWidgetStrategy extends ChartWidgetStrategy {
         long tookMs = 0;
 
         for (Series series : chartSeries) {
-            HistogramResult histogramResult;
-            final boolean shouldCalculateCardinality = "cardinality".equalsIgnoreCase(series.statisticalFunction);
             try {
-                histogramResult = searches.fieldHistogram(
+                final HistogramResult histogramResult = searches.fieldHistogram(
                         series.query,
                         series.field,
                         Searches.DateHistogramInterval.valueOf(interval.toString().toUpperCase(Locale.ENGLISH)),
                         filter,
                         this.timeRange,
-                        !shouldCalculateCardinality,
-                        shouldCalculateCardinality);
-            } catch (FieldTypeException e) {
-                try {
-                    // Try again without calculating stats
-                    histogramResult = searches.fieldHistogram(
-                            series.query,
-                            series.field,
-                            Searches.DateHistogramInterval.valueOf(interval.toString().toUpperCase(Locale.ENGLISH)),
-                            filter,
-                            this.timeRange,
-                            false,
-                            shouldCalculateCardinality);
-                } catch (FieldTypeException e1) {
-                    String msg = "Could not calculate [" + this.getClass().getCanonicalName() + "] widget <" + widgetId + ">. The field was [" + series.field + "]";
-                    LOG.error(msg, e1);
-                    throw new RuntimeException(msg, e1);
+                        "cardinality".equalsIgnoreCase(series.statisticalFunction));
+
+                if (from == null) {
+                    from = histogramResult.getHistogramBoundaries().getFrom();
                 }
+
+                to = histogramResult.getHistogramBoundaries().getTo();
+
+                results.add(histogramResult.getResults());
+                tookMs += histogramResult.took().millis();
+            } catch (Searches.FieldTypeException e) {
+                String msg = "Could not calculate [" + this.getClass().getCanonicalName() + "] widget <" + widgetId + ">. Not a numeric field? The field was [" + series.field + "]";
+                LOG.error(msg, e);
+                throw new RuntimeException(msg, e);
             }
-
-            if (from == null) {
-                from = histogramResult.getHistogramBoundaries().getFrom();
-            }
-
-            to = histogramResult.getHistogramBoundaries().getTo();
-
-            results.add(histogramResult.getResults());
-            tookMs += histogramResult.tookMs();
-
         }
 
         final AbsoluteRange computationTimeRange = AbsoluteRange.create(from, to);

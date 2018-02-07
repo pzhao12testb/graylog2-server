@@ -19,7 +19,6 @@ package org.graylog2.shared.system.stats.jvm;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
-import org.graylog.autovalue.WithBeanGetter;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -32,7 +31,6 @@ import java.util.Map;
 
 @JsonAutoDetect
 @AutoValue
-@WithBeanGetter
 public abstract class JvmStats {
     public static final JvmStats INSTANCE;
 
@@ -81,7 +79,7 @@ public abstract class JvmStats {
             memoryPools.add(memoryPoolMXBean.getName());
         }
 
-        INSTANCE = JvmStats.create(version, vmName, vmVersion, vmVendor, specName, specVersion, specVendor, startTime, memory, inputArguments, bootClassPath, classPath, systemProperties, garbageCollectors, memoryPools);
+        INSTANCE = JvmStats.create(version, vmName,vmVersion,vmVendor,specName,specVersion,specVendor,startTime,memory,inputArguments,bootClassPath,classPath,systemProperties,garbageCollectors, memoryPools);
     }
 
     @JsonProperty
@@ -153,7 +151,6 @@ public abstract class JvmStats {
 
     @JsonAutoDetect
     @AutoValue
-    @WithBeanGetter
     public abstract static class Memory {
         @JsonProperty
         public abstract long heapInit();

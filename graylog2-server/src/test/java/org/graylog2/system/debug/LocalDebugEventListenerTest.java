@@ -17,19 +17,17 @@
 package org.graylog2.system.debug;
 
 import com.google.common.eventbus.EventBus;
+import org.graylog2.events.ClusterEvent;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RunWith(MockitoJUnitRunner.class)
 public class LocalDebugEventListenerTest {
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
-
     @Spy
     private EventBus serverEventBus;
 

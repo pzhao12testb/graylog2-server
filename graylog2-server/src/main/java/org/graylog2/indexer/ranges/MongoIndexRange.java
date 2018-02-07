@@ -21,17 +21,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
 import org.bson.types.ObjectId;
-import org.graylog.autovalue.WithBeanGetter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mongojack.Id;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 
 @AutoValue
-@WithBeanGetter
 @JsonAutoDetect
 public abstract class MongoIndexRange implements IndexRange {
     @Id
@@ -71,19 +68,13 @@ public abstract class MongoIndexRange implements IndexRange {
         return calculatedAt().getMillis();
     }
 
-    @JsonProperty(FIELD_STREAM_IDS)
-    @Override
-    @Nullable
-    public abstract List<String> streamIds();
-
     public static MongoIndexRange create(ObjectId id,
                                          String indexName,
                                          DateTime begin,
                                          DateTime end,
                                          DateTime calculatedAt,
-                                         int calculationDuration,
-                                         List<String> streamIds) {
-        return new AutoValue_MongoIndexRange(id, indexName, begin, end, calculatedAt, calculationDuration, streamIds);
+                                         int calculationDuration) {
+        return new AutoValue_MongoIndexRange(id, indexName, begin, end, calculatedAt, calculationDuration);
     }
 
     @JsonCreator
@@ -92,30 +83,19 @@ public abstract class MongoIndexRange implements IndexRange {
                                          @JsonProperty(FIELD_BEGIN) long beginMillis,
                                          @JsonProperty(FIELD_END) long endMillis,
                                          @JsonProperty(FIELD_CALCULATED_AT) long calculatedAtMillis,
-                                         @JsonProperty(FIELD_TOOK_MS) int calculationDuration,
-                                         @JsonProperty(FIELD_STREAM_IDS) @Nullable List<String> streamIds) {
+                                         @JsonProperty(FIELD_TOOK_MS) int calculationDuration) {
         final DateTime begin = new DateTime(beginMillis, DateTimeZone.UTC);
         final DateTime end = new DateTime(endMillis, DateTimeZone.UTC);
         final DateTime calculatedAt = new DateTime(calculatedAtMillis, DateTimeZone.UTC);
-        return create(id, indexName, begin, end, calculatedAt, calculationDuration, streamIds);
+        return new AutoValue_MongoIndexRange(id, indexName, begin, end, calculatedAt, calculationDuration);
     }
 
     public static MongoIndexRange create(String indexName,
                                          DateTime begin,
                                          DateTime end,
                                          DateTime calculatedAt,
-                                         int calculationDuration,
-                                         List<String> streamIds) {
-        return create(null, indexName, begin, end, calculatedAt, calculationDuration, streamIds);
-    }
-
-    public static MongoIndexRange create(ObjectId id,
-                                         String indexName,
-                                         DateTime begin,
-                                         DateTime end,
-                                         DateTime calculatedAt,
                                          int calculationDuration) {
-        return create(id, indexName, begin, end, calculatedAt, calculationDuration, null);
+        return create(null, indexName, begin, end, calculatedAt, calculationDuration);
     }
 
     public static MongoIndexRange create(IndexRange indexRange) {
@@ -124,15 +104,6 @@ public abstract class MongoIndexRange implements IndexRange {
                 indexRange.begin(),
                 indexRange.end(),
                 indexRange.calculatedAt(),
-                indexRange.calculationDuration(),
-                indexRange.streamIds());
-    }
-
-    public static MongoIndexRange create(String indexName,
-                                         DateTime begin,
-                                         DateTime end,
-                                         DateTime calculatedAt,
-                                         int calculationDuration) {
-        return create(null, indexName, begin, end, calculatedAt, calculationDuration, null);
+                indexRange.calculationDuration());
     }
 }

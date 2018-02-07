@@ -1,10 +1,8 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import Immutable from 'immutable';
+import { Input } from 'react-bootstrap';
 import $ from 'jquery';
-import { Input } from 'components/bootstrap';
-// eslint-disable-next-line no-unused-vars
 import Typeahead from 'typeahead.js'; // Need to import this to load typeahead, even if the variable is never used
 
 import UniversalSearch from 'logic/search/UniversalSearch';
@@ -13,27 +11,10 @@ import ApiRoutes from 'routing/ApiRoutes';
 import URLUtils from 'util/URLUtils';
 import fetch from 'logic/rest/FetchProvider';
 
-/**
- * Component that renders an input offering auto-completion for message fields.
- * Fields are loaded from the Graylog server in the background.
- */
 const TypeAheadFieldInput = React.createClass({
   propTypes: {
-    /** ID of the input. */
-    id: PropTypes.string.isRequired,
-    /**
-     * @deprecated React v15 deprecated `valueLink`s. Please use `onChange`
-     * instead.
-     */
     valueLink: PropTypes.object,
-    /** Specifies if the input should have the input focus or not. */
     autoFocus: PropTypes.bool,
-    /**
-     * Function that is called when the input changes. The function receives
-     * the typeahead event object for the event that triggered the change. For
-     * more information on typeahead events, see:
-     * https://github.com/twitter/typeahead.js/blob/master/doc/jquery_typeahead.md#custom-events
-     */
     onChange: PropTypes.func,
   },
   componentDidMount() {
@@ -94,12 +75,10 @@ const TypeAheadFieldInput = React.createClass({
 
   render() {
     return (
-      <Input id={this.props.id}
-             ref="fieldInput"
-             label={this.props.label}
+      <Input ref="fieldInput"
              wrapperClassName="typeahead-wrapper"
              defaultValue={this.props.valueLink ? this.props.valueLink.value : null}
-             {...this._getFilteredProps()} />
+        {...this._getFilteredProps()}/>
     );
   },
 });

@@ -16,7 +16,9 @@
  */
 package org.graylog2.indexer.results;
 
-import io.searchbox.core.search.aggregation.HistogramAggregation;
+import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.graylog2.indexer.searches.Searches;
 import org.junit.Test;
 
@@ -30,11 +32,11 @@ public class FieldHistogramResultTest {
     @Test
     public void testGetInterval() throws Exception {
         final FieldHistogramResult fieldHistogramResult = new FieldHistogramResult(
-                mock(HistogramAggregation.class),
+                mock(Histogram.class),
                 "",
-                "",
+                BytesArray.EMPTY,
                 Searches.DateHistogramInterval.MINUTE,
-                42L
+                TimeValue.timeValueMillis(42L)
         );
 
         assertThat(fieldHistogramResult.getInterval()).isEqualTo(Searches.DateHistogramInterval.MINUTE);
@@ -43,14 +45,14 @@ public class FieldHistogramResultTest {
     @Test
     @SuppressWarnings("unchecked")
     public void getResultsWorksWithZeroBuckets() throws Exception {
-        final HistogramAggregation dateHistogram = mock(HistogramAggregation.class);
+        final Histogram dateHistogram = mock(Histogram.class);
         when(dateHistogram.getBuckets()).thenReturn(Collections.emptyList());
         final FieldHistogramResult fieldHistogramResult = new FieldHistogramResult(
                 dateHistogram,
                 "",
-                "",
+                BytesArray.EMPTY,
                 Searches.DateHistogramInterval.MINUTE,
-                42L
+                TimeValue.timeValueMillis(42L)
         );
 
         assertThat(fieldHistogramResult.getResults()).isEmpty();

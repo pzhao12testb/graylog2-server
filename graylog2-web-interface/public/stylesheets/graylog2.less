@@ -17,10 +17,6 @@ ul {
   margin: 0;
 }
 
-ul.no-padding {
-  padding: 0;
-}
-
 hr {
   border-top: 1px solid #e3e3e3;
 }
@@ -1050,7 +1046,28 @@ td.limited {
   color: #333333;
   height: 100%;
   margin: 0;
+  overflow: auto;
   width: 100%;
+}
+
+.dashboard .gridster .gs-w {
+  background-color: #FFF;
+  border: 1px solid #D1D1D1;
+  z-index: auto;
+}
+
+.dashboard .gridster .player {
+  border-style: dashed;
+  border-color: #D1D1D1;
+}
+
+.dashboard .gridster .preview-holder {
+  border: none !important;
+  background: #16ACE3 !important;
+}
+
+.dashboard .gridster .resize-preview-holder {
+  z-index: -1;
 }
 
 .dashboard .widget {
@@ -1079,11 +1096,59 @@ td.limited {
   display: none;
 }
 
+.dashboard .widget .search_result_count .value {
+  line-height: 70px !important;
+  text-align: center;
+  font-size: 70px;
+  position: relative;
+  top: 20px;
+}
+
+.dashboard .widget .search_result_count .trend-indicators {
+  font-size: 25px;
+  height: 70px;
+  position: absolute;
+  top: 35px;
+  left: 345px;
+  width: 25px;
+}
+
+.dashboard .widget .search_result_count .trend-indicators .trend-icon {
+  height: 25px;
+  margin-bottom: -18px;
+}
+
+.dashboard .widget .search_result_count .trend-indicators .trend-icons-higher {
+  margin-bottom: 5px;
+}
+
+.dashboard .widget .search_result_count .icon {
+  color: #ebebeb;
+}
+
 .dashboard .widget .loading-failed {
   color: #ff4646 !important;
 }
 
 .dashboard .widget .controls {
+  display: none;
+}
+
+.dashboard .widget .edit-description {
+  display: none;
+  color: #0085A7 !important;
+  font-size: 12px;
+}
+
+.dashboard .widget .edit-description .icon {
+  color: #0085A7 !important;
+}
+
+.dashboard .widget .description-form {
+  display: none;
+}
+
+.dashboard .widget .info .cache-info {
   display: none;
 }
 
@@ -1106,6 +1171,19 @@ td.limited {
   color: #E3E5E5;
 }
 
+.dashboard .gridster {
+  margin-left: -10px;
+  transition: none;
+}
+
+.dashboard .gridster .widget {
+  cursor: move;
+}
+
+.dashboard .gridster.gs-resize-disabled .widget {
+  cursor: default;
+}
+
 .dashboard .widget .dc-chart {
   float: none;
 }
@@ -1113,6 +1191,7 @@ td.limited {
 .dashboard .widget .widget-title {
   font-size: 18px;
   height: 25px;
+  margin-right: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1124,11 +1203,11 @@ td.limited {
 }
 
 .dashboard .widget .widget-update-info {
-  text-align: left;
-  float: left;
+  text-align: right;
+  float: right;
   font-size: 11px;
-  position: absolute;
-  bottom: 10px;
+  height: 25px;
+  line-height: 25px;
   width: 130px;
 }
 
@@ -1138,6 +1217,44 @@ td.limited {
 
 .dashboard .widget svg {
   overflow: hidden;
+}
+
+.dashboard .widget .number {
+  line-height: 70px;
+}
+
+.dashboard .widget .number .value {
+  line-height: 100px;
+  text-align: center;
+  font-size: 70px;
+  position: relative;
+}
+
+.dashboard .widget .number .trend-indicators {
+  font-size: 25px;
+  height: 70px;
+  position: absolute;
+  top: 30px;
+  right: 20px;
+  width: 25px;
+}
+
+.dashboard .widget .number .trend-indicators .trend-icon {
+  color: #E3E5E5;
+  height: 25px;
+  margin-bottom: -18px;
+}
+
+.dashboard .widget .number .trend-indicators .trend-icon.trend-good {
+  color: #8DC63F;
+}
+
+.dashboard .widget .number .trend-indicators .trend-icon.trend-bad {
+  color: #BE1E2D;
+}
+
+.dashboard .widget .number .trend-indicators .trend-icons-higher {
+  margin-bottom: 5px;
 }
 
 .dashboard .widget .quickvalues-visualization {
@@ -1591,9 +1708,12 @@ input.required-input-highlight {
 }
 
 .result-highlight-control label {
+  font-size: 12px;
   display: inline-block;
-  font-size: 1em;
-  line-height: 20px;
+}
+
+.result-highlight-control label > * {
+  vertical-align: middle;
 }
 
 .node-state {
@@ -2196,7 +2316,7 @@ dl.message-details dd {
   margin-left: 1px; /* Ensures that italic text is not cut */
 }
 
-dl.message-details-fields span:not(:last-child) dd {
+dl.message-details-fields dd:not(:last-child) {
   border-bottom: 1px solid #ececec;
 }
 
@@ -2563,6 +2683,8 @@ ul.pill-list > li {
   color: #333;
   background-color: #E3E5E5;
   padding: 6px 12px;
+  line-height: 1.42857143;
+  vertical-align: middle;
 }
 
 .tag-remove,
@@ -2570,6 +2692,7 @@ ul.pill-list > li {
   color: #333;
   cursor: pointer;
   margin-left: 5px;
+  vertical-align: middle;
 }
 
 .tag-remove:before,
@@ -2610,10 +2733,9 @@ ul.pill-list > li {
   height: 1000px;
 }
 
-.sortable-list-cursor {
-  cursor: move;
-}
 .sortable-list {
+  cursor: move;
+
   .dragging {
     opacity: 0.5;
   }
@@ -2650,8 +2772,4 @@ ul.pill-list > li {
 
 .save-button-margin {
   margin-right: 5px;
-}
-
-.form-control.message-id-input {
-  width: 300px;
 }

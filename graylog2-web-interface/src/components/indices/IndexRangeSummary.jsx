@@ -1,10 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Timestamp } from 'components/common';
+import {Timestamp} from 'components/common';
 
 const IndexRangeSummary = React.createClass({
   propTypes: {
-    indexRange: PropTypes.object,
+    indexRange: React.PropTypes.object,
   },
   render() {
     const { indexRange } = this.props;
@@ -13,7 +12,7 @@ const IndexRangeSummary = React.createClass({
     }
     return (
       <span>Range re-calculated{' '}
-        <span title={indexRange.calculated_at}><Timestamp dateTime={indexRange.calculated_at} relative /></span>{' '}
+        <span title={indexRange.calculated_at}><Timestamp dateTime={indexRange.calculated_at} relative/></span>{' '}
         in {indexRange.took_ms}ms.
       </span>
     );

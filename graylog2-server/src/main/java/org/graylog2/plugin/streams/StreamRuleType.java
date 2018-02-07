@@ -17,15 +17,14 @@
 package org.graylog2.plugin.streams;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum StreamRuleType {
     EXACT(1, "match exactly", "match exactly"),
     REGEX(2, "match regular expression", "match regular expression"),
     GREATER(3, "greater than", "be greater than"),
     SMALLER(4, "smaller than", "be smaller than"),
-    PRESENCE(5, "field presence", "be present"),
-    CONTAINS(6, "contain", "contain"),
-    ALWAYS_MATCH(7, "always match", "always match");
+    PRESENCE(5, "field presence", "be present");
 
     private final int value;
     private final String shortDesc;

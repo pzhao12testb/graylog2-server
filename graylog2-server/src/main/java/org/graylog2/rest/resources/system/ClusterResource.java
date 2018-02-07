@@ -23,7 +23,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.graylog2.cluster.Node;
 import org.graylog2.cluster.NodeNotFoundException;
 import org.graylog2.cluster.NodeService;
@@ -34,9 +33,9 @@ import org.graylog2.plugin.system.NodeId;
 import org.graylog2.rest.models.system.cluster.responses.NodeSummary;
 import org.graylog2.rest.models.system.cluster.responses.NodeSummaryList;
 import org.graylog2.shared.rest.resources.RestResource;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.inject.Inject;
-import javax.validation.constraints.NotEmpty;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -48,7 +47,6 @@ import java.util.Locale;
 import java.util.Map;
 
 @Api(value = "System/Cluster", description = "Node discovery")
-@RequiresAuthentication
 @Path("/system/cluster")
 @Produces(MediaType.APPLICATION_JSON)
 public class ClusterResource extends RestResource {

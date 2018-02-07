@@ -1,3 +1,5 @@
+/// <reference path="../../../declarations/bluebird/bluebird.d.ts" />
+
 const UserNotification = require('util/UserNotification');
 const URLUtils = require('util/URLUtils');
 import ApiRoutes = require('routing/ApiRoutes');
@@ -56,7 +58,7 @@ export const UsersStore = {
   },
 
   load(username: string): Promise<User> {
-    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.load(encodeURIComponent(username)).url);
+    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.load(username).url);
     const promise = fetch('GET', url);
     promise.catch((error) => {
       UserNotification.error("Loading user failed with status: " + error,
@@ -67,7 +69,7 @@ export const UsersStore = {
   },
 
   deleteUser(username: string): Promise<string[]> {
-    const  url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.delete(encodeURIComponent(username)).url);
+    const  url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.delete(username).url);
     const  promise = fetch('DELETE', url);
 
     promise.then(() => {
@@ -82,15 +84,22 @@ export const UsersStore = {
     return promise;
   },
 
+  updateRoles(username: string, roles: string[]): void {
+    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.update(username).url);
+    const promise = fetch('PUT', url, {roles: roles});
+
+    return promise;
+  },
+
   changePassword(username: string, request: ChangePasswordRequest): void {
-    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.changePassword(encodeURIComponent(username)).url);
+    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.changePassword(username).url);
     const promise = fetch('PUT', url, request);
 
     return promise;
   },
 
   update(username: string, request: any): void {
-    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.update(encodeURIComponent(username)).url);
+    const url = URLUtils.qualifyUrl(ApiRoutes.UsersApiController.update(username).url);
     const promise = fetch('PUT', url, request);
 
     return promise;

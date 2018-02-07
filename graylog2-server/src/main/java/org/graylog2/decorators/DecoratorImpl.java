@@ -20,22 +20,19 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
-import org.graylog.autovalue.WithBeanGetter;
 import org.graylog2.database.CollectionName;
-import org.mongojack.Id;
+import org.hibernate.validator.constraints.NotBlank;
 import org.mongojack.ObjectId;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotBlank;
 import java.util.Map;
 import java.util.Optional;
 
 @AutoValue
-@WithBeanGetter
 @JsonAutoDetect
 @CollectionName("decorators")
 public abstract class DecoratorImpl implements Decorator, Comparable {
-    static final String FIELD_ID = "id";
+    static final String FIELD_ID = "_id";
     static final String FIELD_TYPE = "type";
     static final String FIELD_CONFIG = "config";
     static final String FIELD_STREAM = "stream";
@@ -51,7 +48,6 @@ public abstract class DecoratorImpl implements Decorator, Comparable {
     }
 
     @JsonProperty(FIELD_ID)
-    @Id
     @ObjectId
     @Nullable
     @Override
@@ -77,7 +73,7 @@ public abstract class DecoratorImpl implements Decorator, Comparable {
     public abstract Builder toBuilder();
 
     @JsonCreator
-    public static DecoratorImpl create(@JsonProperty(FIELD_ID) @Id @ObjectId @Nullable String id,
+    public static DecoratorImpl create(@JsonProperty(FIELD_ID) @Nullable String id,
                                        @JsonProperty(FIELD_TYPE) String type,
                                        @JsonProperty(FIELD_CONFIG) Map<String, Object> config,
                                        @JsonProperty(FIELD_STREAM) Optional<String> stream,

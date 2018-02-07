@@ -17,14 +17,11 @@
 package org.graylog2.indexer.retention.strategies;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableMap;
-import org.graylog2.audit.AuditActor;
-import org.graylog2.audit.AuditEventSender;
-import org.graylog2.indexer.IndexSet;
-import org.graylog2.indexer.indexset.IndexSetConfig;
+import org.graylog2.auditlog.AuditLogger;
+import org.graylog2.indexer.Deflector;
 import org.graylog2.indexer.indices.Indices;
+import org.graylog2.plugin.cluster.ClusterConfigService;
 import org.graylog2.plugin.indexer.retention.RetentionStrategyConfig;
-import org.graylog2.plugin.system.NodeId;
 import org.graylog2.shared.system.activities.ActivityWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,49 +30,39 @@ import javax.inject.Inject;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static org.graylog2.audit.AuditEventTypes.ES_INDEX_RETENTION_DELETE;
-
 public class DeletionRetentionStrategy extends AbstractIndexCountBasedRetentionStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(DeletionRetentionStrategy.class);
 
     private final Indices indices;
-    private final NodeId nodeId;
-    private final AuditEventSender auditEventSender;
+    private final ClusterConfigService clusterConfigService;
 
     @Inject
-    public DeletionRetentionStrategy(Indices indices,
+    public DeletionRetentionStrategy(Deflector deflector,
+                                     Indices indices,
                                      ActivityWriter activityWriter,
-                                     NodeId nodeId,
-                                     AuditEventSender auditEventSender) {
-        super(indices, activityWriter);
+                                     ClusterConfigService clusterConfigService,
+                                     AuditLogger auditLogger) {
+        super(deflector, indices, activityWriter, auditLogger);
         this.indices = indices;
-        this.nodeId = nodeId;
-        this.auditEventSender = auditEventSender;
+        this.clusterConfigService = clusterConfigService;
     }
 
     @Override
-    protected Optional<Integer> getMaxNumberOfIndices(IndexSet indexSet) {
-        final IndexSetConfig indexSetConfig = indexSet.getConfig();
-        final RetentionStrategyConfig strategyConfig = indexSetConfig.retentionStrategy();
+    protected Optional<Integer> getMaxNumberOfIndices() {
+        final DeletionRetentionStrategyConfig config = clusterConfigService.get(DeletionRetentionStrategyConfig.class);
 
-        if (!(strategyConfig instanceof DeletionRetentionStrategyConfig)) {
-            throw new IllegalStateException("Invalid retention strategy config <" + strategyConfig.getClass().getCanonicalName() + "> for index set <" + indexSetConfig.id() + ">");
+        if (config != null) {
+            return Optional.of(config.maxNumberOfIndices());
+        } else {
+            return Optional.empty();
         }
-
-        final DeletionRetentionStrategyConfig config = (DeletionRetentionStrategyConfig) strategyConfig;
-
-        return Optional.of(config.maxNumberOfIndices());
     }
 
     @Override
-    public void retain(String indexName, IndexSet indexSet) {
+    public void retain(String indexName) {
         final Stopwatch sw = Stopwatch.createStarted();
 
         indices.delete(indexName);
-        auditEventSender.success(AuditActor.system(nodeId), ES_INDEX_RETENTION_DELETE, ImmutableMap.of(
-                "index_name", indexName,
-                "retention_strategy", this.getClass().getCanonicalName()
-        ));
 
         LOG.info("Finished index retention strategy [delete] for index <{}> in {}ms.", indexName,
                 sw.stop().elapsed(TimeUnit.MILLISECONDS));

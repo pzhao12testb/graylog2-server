@@ -25,6 +25,8 @@ import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.database.validators.Validator;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,11 +35,8 @@ import java.util.Map;
 
 @CollectionName("notifications")
 public class NotificationImpl extends PersistedImpl implements Notification {
-    static final String FIELD_TYPE = "type";
-    static final String FIELD_SEVERITY = "severity";
-    static final String FIELD_TIMESTAMP = "timestamp";
-    static final String FIELD_NODE_ID = "node_id";
-    static final String FIELD_DETAILS = "details";
+
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationImpl.class);
 
     private Type type;
     private Severity severity;
@@ -47,19 +46,19 @@ public class NotificationImpl extends PersistedImpl implements Notification {
     protected NotificationImpl(ObjectId id, Map<String, Object> fields) {
         super(id, fields);
 
-        this.type = Type.valueOf(((String) fields.get(FIELD_TYPE)).toUpperCase(Locale.ENGLISH));
-        this.severity = Severity.valueOf(((String) fields.get(FIELD_SEVERITY)).toUpperCase(Locale.ENGLISH));
-        this.timestamp = new DateTime(fields.get(FIELD_TIMESTAMP), DateTimeZone.UTC);
-        this.node_id = (String) fields.get(FIELD_NODE_ID);
+        this.type = Type.valueOf(((String) fields.get("type")).toUpperCase(Locale.ENGLISH));
+        this.severity = Severity.valueOf(((String) fields.get("severity")).toUpperCase(Locale.ENGLISH));
+        this.timestamp = new DateTime(fields.get("timestamp"), DateTimeZone.UTC);
+        this.node_id = (String) fields.get("node_id");
     }
 
     protected NotificationImpl(Map<String, Object> fields) {
         super(fields);
 
-        this.type = Type.valueOf(((String) fields.get(FIELD_TYPE)).toUpperCase(Locale.ENGLISH));
-        this.severity = Severity.valueOf(((String) fields.get(FIELD_SEVERITY)).toUpperCase(Locale.ENGLISH));
-        this.timestamp = new DateTime(fields.get(FIELD_TIMESTAMP), DateTimeZone.UTC);
-        this.node_id = (String) fields.get(FIELD_NODE_ID);
+        this.type = Type.valueOf(((String) fields.get("type")).toUpperCase(Locale.ENGLISH));
+        this.severity = Severity.valueOf(((String) fields.get("severity")).toUpperCase(Locale.ENGLISH));
+        this.timestamp = new DateTime(fields.get("timestamp"), DateTimeZone.UTC);
+        this.node_id = (String) fields.get("node_id");
     }
 
     public NotificationImpl() {
@@ -69,14 +68,14 @@ public class NotificationImpl extends PersistedImpl implements Notification {
     @Override
     public Notification addType(Type type) {
         this.type = type;
-        fields.put(FIELD_TYPE, type.toString().toLowerCase(Locale.ENGLISH));
+        fields.put("type", type.toString().toLowerCase(Locale.ENGLISH));
         return this;
     }
 
     @Override
     public Notification addTimestamp(DateTime timestamp) {
         this.timestamp = timestamp;
-        fields.put(FIELD_TIMESTAMP, Tools.getISO8601String(timestamp));
+        fields.put("timestamp", Tools.getISO8601String(timestamp));
 
         return this;
     }
@@ -84,7 +83,7 @@ public class NotificationImpl extends PersistedImpl implements Notification {
     @Override
     public Notification addSeverity(Severity severity) {
         this.severity = severity;
-        fields.put(FIELD_SEVERITY, severity.toString().toLowerCase(Locale.ENGLISH));
+        fields.put("severity", severity.toString().toLowerCase(Locale.ENGLISH));
         return this;
     }
 
@@ -116,17 +115,17 @@ public class NotificationImpl extends PersistedImpl implements Notification {
     @Override
     public Notification addDetail(String key, Object value) {
         Map<String, Object> details;
-        if (fields.get(FIELD_DETAILS) == null)
-            fields.put(FIELD_DETAILS, new HashMap<String, Object>());
+        if (fields.get("details") == null)
+            fields.put("details", new HashMap<String, Object>());
 
-        details = (Map<String, Object>) fields.get(FIELD_DETAILS);
+        details = (Map<String, Object>) fields.get("details");
         details.put(key, value);
         return this;
     }
 
     @Override
     public Object getDetail(String key) {
-        final Map<String, Object> details = (Map<String, Object>) fields.get(FIELD_DETAILS);
+        final Map<String, Object> details = (Map<String, Object>) fields.get("details");
         if (details == null)
             return null;
 
@@ -143,7 +142,7 @@ public class NotificationImpl extends PersistedImpl implements Notification {
 
     @Override
     public Notification addNode(String nodeId) {
-        fields.put(FIELD_NODE_ID, nodeId);
+        fields.put("node_id", nodeId);
         return this;  //To change body of created methods use File | Settings | File Templates.
     }
 

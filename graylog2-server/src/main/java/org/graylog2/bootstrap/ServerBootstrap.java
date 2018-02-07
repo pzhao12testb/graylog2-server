@@ -16,21 +16,20 @@
  */
 package org.graylog2.bootstrap;
 
-import com.github.rvesse.airline.annotations.Option;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.ProvisionException;
-import org.graylog2.audit.AuditActor;
-import org.graylog2.audit.AuditEventSender;
+import io.airlift.airline.Option;
+import org.graylog2.auditlog.AuditLogger;
 import org.graylog2.plugin.BaseConfiguration;
 import org.graylog2.plugin.ServerStatus;
 import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.inputs.MessageInput;
-import org.graylog2.plugin.system.NodeId;
 import org.graylog2.shared.bindings.GenericBindings;
 import org.graylog2.shared.bindings.GenericInitializerBindings;
+import org.graylog2.shared.bindings.MessageInputBindings;
 import org.graylog2.shared.bindings.SchedulerBindings;
 import org.graylog2.shared.bindings.ServerStatusBindings;
 import org.graylog2.shared.bindings.SharedPeriodicalBindings;
@@ -54,10 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.graylog2.audit.AuditEventTypes.NODE_STARTUP_COMPLETE;
-import static org.graylog2.audit.AuditEventTypes.NODE_STARTUP_INITIATE;
 
 public abstract class ServerBootstrap extends CmdLineTool {
     private static final Logger LOG = LoggerFactory.getLogger(ServerBootstrap.class);
@@ -95,20 +90,17 @@ public abstract class ServerBootstrap extends CmdLineTool {
 
     @Override
     protected void startCommand() {
-        final AuditEventSender auditEventSender = injector.getInstance(AuditEventSender.class);
-        final NodeId nodeId = injector.getInstance(NodeId.class);
-        final String systemInformation = Tools.getSystemInformation();
-        final Map<String, Object> auditEventContext = ImmutableMap.of(
-            "version", version.toString(),
-            "java", systemInformation,
-            "node_id", nodeId.toString()
+        final AuditLogger auditLogger = injector.getInstance(AuditLogger.class);
+        final Map<String, Object> auditLogContext = ImmutableMap.of(
+            "version", version,
+            "java", Tools.getSystemInformation()
         );
-        auditEventSender.success(AuditActor.system(nodeId), NODE_STARTUP_INITIATE, auditEventContext);
+        auditLogger.success("<system>", "initiated", "startup", auditLogContext);
 
         final OS os = OS.getOs();
 
         LOG.info("Graylog {} {} starting up", commandName, version);
-        LOG.info("JRE: {}", systemInformation);
+        LOG.info("JRE: {}", Tools.getSystemInformation());
         LOG.info("Deployment: {}", configuration.getInstallationSource());
         LOG.info("OS: {}", os.getPlatformName());
         LOG.info("Arch: {}", os.getArch());
@@ -126,12 +118,12 @@ public abstract class ServerBootstrap extends CmdLineTool {
         } catch (ProvisionException e) {
             LOG.error("Guice error", e);
             annotateProvisionException(e);
-            auditEventSender.failure(AuditActor.system(nodeId), NODE_STARTUP_INITIATE, auditEventContext);
+            auditLogger.failure("<system>", "initiated", "startup", auditLogContext);
             System.exit(-1);
             return;
         } catch (Exception e) {
             LOG.error("Unexpected exception", e);
-            auditEventSender.failure(AuditActor.system(nodeId), NODE_STARTUP_INITIATE, auditEventContext);
+            auditLogger.failure("<system>", "initiated", "startup", auditLogContext);
             System.exit(-1);
             return;
         }
@@ -153,14 +145,14 @@ public abstract class ServerBootstrap extends CmdLineTool {
                 LOG.error("Unable to shutdown properly on time. {}", serviceManager.servicesByState());
             }
             LOG.error("Graylog startup failed. Exiting. Exception was:", e);
-            auditEventSender.failure(AuditActor.system(nodeId), NODE_STARTUP_INITIATE, auditEventContext);
+            auditLogger.failure("<system>", "initiated", "startup", auditLogContext);
             System.exit(-1);
         }
         LOG.info("Services started, startup times in ms: {}", serviceManager.startupTimes());
 
         activityWriter.write(new Activity("Started up.", Main.class));
         LOG.info("Graylog " + commandName + " up and running.");
-        auditEventSender.success(AuditActor.system(nodeId), NODE_STARTUP_COMPLETE, auditEventContext);
+        auditLogger.success("<system>", "completed", "startup", auditLogContext);
 
         // Block forever.
         try {
@@ -176,7 +168,7 @@ public abstract class ServerBootstrap extends CmdLineTool {
         pidFilePath.toFile().deleteOnExit();
 
         try {
-            if (isNullOrEmpty(pid) || "unknown".equals(pid)) {
+            if (pid == null || pid.isEmpty() || pid.equals("unknown")) {
                 throw new Exception("Could not determine PID.");
             }
 
@@ -198,6 +190,7 @@ public abstract class ServerBootstrap extends CmdLineTool {
         result.add(new SharedPeriodicalBindings());
         result.add(new SchedulerBindings());
         result.add(new GenericInitializerBindings());
+        result.add(new MessageInputBindings());
         result.add(new SystemStatsModule(configuration.isDisableSigar()));
 
         return result;

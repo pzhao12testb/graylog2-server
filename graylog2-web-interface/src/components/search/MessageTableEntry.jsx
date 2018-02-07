@@ -1,45 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import Immutable from 'immutable';
-
 import MessageDetail from './MessageDetail';
-import { Timestamp } from 'components/common';
-import StringUtils from 'util/StringUtils';
+import Immutable from 'immutable';
+import {Timestamp} from 'components/common';
 
 const MessageTableEntry = React.createClass({
-  propTypes: {
-    allStreams: PropTypes.instanceOf(Immutable.List).isRequired,
-    allStreamsLoaded: PropTypes.bool.isRequired,
-    disableSurroundingSearch: PropTypes.bool,
-    expandAllRenderAsync: PropTypes.bool.isRequired,
-    expanded: PropTypes.bool.isRequired,
-    highlight: PropTypes.bool,
-    highlightMessage: PropTypes.string,
-    inputs: PropTypes.instanceOf(Immutable.Map).isRequired,
-    message: PropTypes.shape({
-      fields: PropTypes.object.isRequired,
-      highlight_ranges: PropTypes.object,
-      id: PropTypes.string.isRequired,
-      index: PropTypes.string.isRequired,
-    }).isRequired,
-    nodes: PropTypes.instanceOf(Immutable.Map).isRequired,
-    searchConfig: PropTypes.object,
-    selectedFields: PropTypes.instanceOf(Immutable.OrderedSet),
-    showMessageRow: PropTypes.bool,
-    streams: PropTypes.instanceOf(Immutable.Map).isRequired,
-    toggleDetail: PropTypes.func.isRequired,
-  },
-  getDefaultProps() {
-    return {
-      disableSurroundingSearch: false,
-      highlight: false,
-      highlightMessage: undefined,
-      searchConfig: undefined,
-      selectedFields: Immutable.OrderedSet(),
-      showMessageRow: false,
-    };
-  },
-
   shouldComponentUpdate(newProps) {
     if (this.props.highlight !== newProps.highlight) {
       return true;
@@ -66,8 +30,7 @@ const MessageTableEntry = React.createClass({
     if (fullOrigValue === undefined) {
       return '';
     }
-    // Ensure the field is a string for later processing
-    const fullStringOrigValue = StringUtils.stringify(fullOrigValue);
+    const fullStringOrigValue = String(fullOrigValue); // Ensure the field is a string for later processing
 
     // Truncate the field to 2048 characters if requested. This is for performance reasons to avoid hogging the CPU.
     // It's not optimal, more like a workaround to at least being able to show the page...
@@ -85,63 +48,59 @@ const MessageTableEntry = React.createClass({
           }
           chunks.push(<span key={key++} className="result-highlight-colored">{origValue.substring(range.get('start'), range.get('start') + range.get('length'))}</span>);
           if ((idx + 1) < highlights.size) {
-            const nextRange = highlights.get(idx + 1);
+            const nextRange = highlights.get(idx+1);
             chunks.push(<span key={key++}>{origValue.substring(range.get('start') + range.get('length'), nextRange.get('start'))}</span>);
             position = nextRange.get('start');
           } else {
-            chunks.push(<span key={key++}>{origValue.substring(range.get('start') + range.get('length'))}</span>);
+            chunks.push(<span key={key++}>{origValue.substring(range.get('start')+ range.get('length'))}</span>);
             position = range.get('start') + range.get('length');
           }
         });
         return <span>{chunks}</span>;
+      } else {
+        return String(origValue);
       }
+    } else {
       return String(origValue);
     }
-    return String(origValue);
   },
   _toggleDetail() {
-    this.props.toggleDetail(`${this.props.message.index}-${this.props.message.id}`);
+    this.props.toggleDetail(this.props.message.id);
   },
   render() {
     const colSpanFixup = this.props.selectedFields.size + 1;
 
-    let classes = 'message-group';
+    let classes = "message-group";
     if (this.props.expanded) {
-      classes += ' message-group-toggled';
+      classes += " message-group-toggled";
     }
     if (this.props.message.id === this.props.highlightMessage) {
       classes += ' message-highlight';
     }
     return (
       <tbody className={classes}>
-        <tr className="fields-row" onClick={this._toggleDetail}>
-          <td><strong>
-            <Timestamp dateTime={this.props.message.fields.timestamp} />
-          </strong></td>
-          { this.props.selectedFields.toSeq().map(selectedFieldName => <td
+      <tr className="fields-row" onClick={this._toggleDetail}>
+        <td><strong>
+          <Timestamp dateTime={this.props.message.fields.timestamp}/>
+        </strong></td>
+        { this.props.selectedFields.toSeq().map(selectedFieldName => <td
           key={selectedFieldName}>{this.possiblyHighlight(selectedFieldName, true)}</td>) }
-        </tr>
+      </tr>
 
-        {this.props.showMessageRow &&
-        <tr className="message-row" onClick={this._toggleDetail}>
-          <td colSpan={colSpanFixup}><div className="message-wrapper">{this.possiblyHighlight('message', true)}</div></td>
-        </tr>
+      {this.props.showMessageRow &&
+      <tr className="message-row" onClick={this._toggleDetail}>
+        <td colSpan={colSpanFixup}><div className="message-wrapper">{this.possiblyHighlight('message', true)}</div></td>
+      </tr>
         }
-        {this.props.expanded &&
-        <tr className="message-detail-row" style={{ display: 'table-row' }}>
-          <td colSpan={colSpanFixup}>
-            <MessageDetail message={this.props.message}
-                           inputs={this.props.inputs}
-                           streams={this.props.streams}
-                           allStreams={this.props.allStreams}
-                           allStreamsLoaded={this.props.allStreamsLoaded}
-                           nodes={this.props.nodes}
-                           possiblyHighlight={this.possiblyHighlight}
-                           disableSurroundingSearch={this.props.disableSurroundingSearch}
-                           expandAllRenderAsync={this.props.expandAllRenderAsync}
-                           searchConfig={this.props.searchConfig}/>
-          </td>
-        </tr>
+      {this.props.expanded &&
+      <tr className="message-detail-row" style={{display: "table-row"}}>
+        <td colSpan={colSpanFixup}>
+          <MessageDetail message={this.props.message} inputs={this.props.inputs} streams={this.props.streams}
+                         allStreams={this.props.allStreams} allStreamsLoaded={this.props.allStreamsLoaded}
+                         nodes={this.props.nodes} possiblyHighlight={this.possiblyHighlight}
+                         expandAllRenderAsync={this.props.expandAllRenderAsync} searchConfig={this.props.searchConfig} />
+        </td>
+      </tr>
         }
       </tbody>
     );

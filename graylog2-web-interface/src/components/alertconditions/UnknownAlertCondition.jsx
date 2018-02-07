@@ -1,40 +1,24 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Alert, Col, DropdownButton, MenuItem } from 'react-bootstrap';
-
-import { EntityListItem } from 'components/common';
+import { Row, Col, Badge } from 'react-bootstrap';
 
 const UnknownAlertCondition = React.createClass({
   propTypes: {
-    alertCondition: PropTypes.object.isRequired,
-    stream: PropTypes.object,
-    onDelete: PropTypes.func.isRequired,
+    alertCondition: React.PropTypes.object.isRequired,
   },
-
   render() {
-    const condition = this.props.alertCondition;
-    const stream = this.props.stream;
-
-    const actions = [
-      <DropdownButton key="actions-button" title="Actions" pullRight id={`more-actions-dropdown-${condition.id}`}>
-        <MenuItem onSelect={this.props.onDelete}>Delete</MenuItem>
-      </DropdownButton>,
-    ];
-
-    const content = (
-      <Col md={12}>
-        <Alert bsStyle="warning">
-          Could not resolve condition type. This is most likely caused by a missing plugin in your Graylog setup.
-        </Alert>
-      </Col>
-    );
+    const alertCondition = this.props.alertCondition;
     return (
-      <EntityListItem key={`entry-list-${condition.id}`}
-                      title="Unknown condition"
-                      titleSuffix={`(${condition.type})`}
-                      description={stream ? <span>Watching stream <em>{stream.title}</em></span> : 'Not watching any stream'}
-                      actions={actions}
-                      contentRow={content} />
+      <span>
+        <Row className="alert-condition" data-condition-id={alertCondition.id}>
+          <Col md={9}>
+            <h3>Unknown alert condition ({alertCondition.type}) {alertCondition.in_grace && <Badge className="badge-info">in grace period</Badge>}</h3>
+          </Col>
+
+          <Col md={3} style={{textAlign: 'right'}}>
+          </Col>
+        </Row>
+        <hr />
+      </span>
     );
   },
 });

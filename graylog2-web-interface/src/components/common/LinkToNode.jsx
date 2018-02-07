@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import Reflux from 'reflux';
 import { Link } from 'react-router';
@@ -9,18 +8,9 @@ const NodesStore = StoreProvider.getStore('Nodes');
 import Routes from 'routing/Routes';
 import { Spinner } from 'components/common';
 
-/**
- * Component that creates a link to a Graylog node. The information in the link includes:
- *  - Marker indicating whether the Graylog node is master or not
- *  - Short Graylog node ID
- *  - Graylog node hostname
- *
- * All this information will be obtained from the `NodesStore`.
- */
 const LinkToNode = React.createClass({
   propTypes: {
-    /** Node ID that will be used to generate the link. */
-    nodeId: PropTypes.string.isRequired,
+    nodeId: React.PropTypes.string.isRequired,
   },
   mixins: [Reflux.connect(NodesStore)],
   render() {

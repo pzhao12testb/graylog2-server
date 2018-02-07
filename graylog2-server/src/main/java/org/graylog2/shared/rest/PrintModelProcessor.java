@@ -21,7 +21,6 @@ import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
-import org.graylog2.rest.RestTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,17 @@ public class PrintModelProcessor implements ModelProcessor {
         final List<ResourceDescription> resourceDescriptions = new ArrayList<>();
         for (Resource resource : resources) {
             for (ResourceMethod resourceMethod : resource.getAllMethods()) {
-                final String path = RestTools.getPathFromResource(resource);
+                String path = resource.getPath();
+                Resource parent = resource.getParent();
+                while (parent != null) {
+                    if (!path.startsWith("/")) {
+                        path = "/" + path;
+                    }
+
+                    path = parent.getPath() + path;
+                    parent = parent.getParent();
+                }
+
                 resourceDescriptions.add(new ResourceDescription(resourceMethod.getHttpMethod(), path, resource.getHandlerClasses()));
             }
         }

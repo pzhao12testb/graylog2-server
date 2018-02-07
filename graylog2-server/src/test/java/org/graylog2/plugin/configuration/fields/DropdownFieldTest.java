@@ -24,6 +24,9 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
 public class DropdownFieldTest {
 
     @Test

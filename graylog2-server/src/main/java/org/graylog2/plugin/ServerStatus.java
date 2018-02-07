@@ -19,9 +19,6 @@ package org.graylog2.plugin;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.google.inject.Provider;
-import org.graylog2.audit.AuditActor;
-import org.graylog2.audit.AuditEventSender;
 import org.graylog2.plugin.lifecycles.Lifecycle;
 import org.graylog2.plugin.system.NodeId;
 import org.graylog2.shared.SuppressForbidden;
@@ -36,8 +33,6 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.graylog2.audit.AuditEventTypes.MESSAGE_PROCESSING_LOCK;
 
 @Singleton
 public class ServerStatus {
@@ -55,7 +50,6 @@ public class ServerStatus {
 
     private final EventBus eventBus;
     private final NodeId nodeId;
-    private final Provider<AuditEventSender> auditEventSenderProvider;
     private final String clusterId;
     private final DateTime startedAt;
     private final Set<Capability> capabilitySet;
@@ -68,10 +62,9 @@ public class ServerStatus {
     private volatile Lifecycle lifecycle = Lifecycle.UNINITIALIZED;
 
     @Inject
-    public ServerStatus(BaseConfiguration configuration, Set<Capability> capabilities, EventBus eventBus, Provider<AuditEventSender> auditEventSenderProvider) {
+    public ServerStatus(BaseConfiguration configuration, Set<Capability> capabilities, EventBus eventBus) {
         this.eventBus = eventBus;
         this.nodeId = new NodeId(configuration.getNodeIdFile());
-        this.auditEventSenderProvider = auditEventSenderProvider;
         this.clusterId = "";
         this.startedAt = Tools.nowUTC();
         this.capabilitySet = Sets.newHashSet(capabilities); // copy, because we support adding more capabilities later
@@ -199,11 +192,7 @@ public class ServerStatus {
 
     public void pauseMessageProcessing(boolean locked) {
         // Never override pause lock if already locked.
-        if (processingPauseLocked.compareAndSet(false, locked) && locked) {
-            auditEventSenderProvider.get().success(AuditActor.system(nodeId), MESSAGE_PROCESSING_LOCK);
-        } else if (locked) {
-            auditEventSenderProvider.get().failure(AuditActor.system(nodeId), MESSAGE_PROCESSING_LOCK);
-        }
+        processingPauseLocked.compareAndSet(false, locked);
         isProcessing.set(false);
 
         publishLifecycle(Lifecycle.PAUSED);

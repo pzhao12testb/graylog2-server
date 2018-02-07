@@ -21,16 +21,15 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableMap;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.graylog2.ConfigurationException;
-import org.graylog2.audit.jersey.NoAuditEvent;
 import org.graylog2.inputs.extractors.JsonExtractor;
 import org.graylog2.plugin.inputs.Converter;
 import org.graylog2.plugin.inputs.Extractor;
 import org.graylog2.rest.models.tools.requests.JsonTestRequest;
 import org.graylog2.rest.models.tools.responses.JsonTesterResponse;
 import org.graylog2.shared.rest.resources.RestResource;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
@@ -64,7 +63,6 @@ public class JsonTesterResource extends RestResource {
     @POST
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
-    @NoAuditEvent("only used for testing JSON extractor")
     public JsonTesterResponse post(@Valid @NotNull JsonTestRequest r) {
         return testJsonExtractor(r.string(), r.flatten(), r.listSeparator(), r.keySeparator(), r.kvSeparator(), r.replaceKeyWhitespace(), r.keyWhitespaceReplacement(), r.keyPrefix());
     }

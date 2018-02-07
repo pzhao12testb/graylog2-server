@@ -17,24 +17,28 @@
 package org.graylog2.alerts.types;
 
 import org.graylog2.alerts.AlertConditionTest;
+import org.graylog2.indexer.InvalidRangeFormatException;
 import org.graylog2.indexer.results.CountResult;
+import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.alarms.AlertCondition;
-import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 import org.junit.Test;
 
-import java.util.Locale;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class MessageCountAlertConditionTest extends AlertConditionTest {
-    private final int threshold = 100;
+    protected final int threshold = 100;
 
     @Test
     public void testConstructor() throws Exception {
@@ -44,23 +48,6 @@ public class MessageCountAlertConditionTest extends AlertConditionTest {
 
         assertNotNull(messageCountAlertCondition);
         assertNotNull(messageCountAlertCondition.getDescription());
-        final String thresholdType = (String) messageCountAlertCondition.getParameters().get("threshold_type");
-        assertEquals(thresholdType, thresholdType.toUpperCase(Locale.ENGLISH));
-    }
-
-    /*
-     * Ensure MessageCountAlertCondition objects created before 2.2.0 and having a lowercase threshold_type,
-     * get converted to uppercase for consistency with new created alert conditions.
-     */
-    @Test
-    public void testConstructorOldObjects() throws Exception {
-        final Map<String, Object> parameters = getParametersMap(0, 0, MessageCountAlertCondition.ThresholdType.MORE, 0);
-        parameters.put("threshold_type", MessageCountAlertCondition.ThresholdType.MORE.toString().toLowerCase(Locale.ENGLISH));
-
-        final MessageCountAlertCondition messageCountAlertCondition = getMessageCountAlertCondition(parameters, alertConditionTitle);
-
-        final String thresholdType = (String) messageCountAlertCondition.getParameters().get("threshold_type");
-        assertEquals(thresholdType, thresholdType.toUpperCase(Locale.ENGLISH));
     }
 
     @Test
@@ -71,8 +58,10 @@ public class MessageCountAlertConditionTest extends AlertConditionTest {
 
         searchCountShouldReturn(threshold + 1);
         // AlertCondition was never triggered before
-        final AlertCondition.CheckResult result = messageCountAlertCondition.runCheck();
+        alertLastTriggered(-1);
+        final AlertCondition.CheckResult result = alertService.triggered(messageCountAlertCondition);
 
+        assertFalse("We should not be in grace period!", alertService.inGracePeriod(messageCountAlertCondition));
         assertTriggered(messageCountAlertCondition, result);
     }
 
@@ -83,8 +72,9 @@ public class MessageCountAlertConditionTest extends AlertConditionTest {
         final MessageCountAlertCondition messageCountAlertCondition = getConditionWithParameters(type, threshold);
 
         searchCountShouldReturn(threshold - 1);
+        alertLastTriggered(-1);
 
-        final AlertCondition.CheckResult result = messageCountAlertCondition.runCheck();
+        final AlertCondition.CheckResult result = alertService.triggered(messageCountAlertCondition);
 
         assertTriggered(messageCountAlertCondition, result);
     }
@@ -96,8 +86,9 @@ public class MessageCountAlertConditionTest extends AlertConditionTest {
         final MessageCountAlertCondition messageCountAlertCondition = getConditionWithParameters(type, threshold);
 
         searchCountShouldReturn(threshold);
+        alertLastTriggered(-1);
 
-        final AlertCondition.CheckResult result = messageCountAlertCondition.runCheck();
+        final AlertCondition.CheckResult result = alertService.triggered(messageCountAlertCondition);
 
         assertNotTriggered(result);
     }
@@ -109,29 +100,65 @@ public class MessageCountAlertConditionTest extends AlertConditionTest {
         final MessageCountAlertCondition messageCountAlertCondition = getConditionWithParameters(type, threshold);
 
         searchCountShouldReturn(threshold);
+        alertLastTriggered(-1);
 
-        final AlertCondition.CheckResult result = messageCountAlertCondition.runCheck();
+        final AlertCondition.CheckResult result = alertService.triggered(messageCountAlertCondition);
 
         assertNotTriggered(result);
     }
 
-    private MessageCountAlertCondition getConditionWithParameters(MessageCountAlertCondition.ThresholdType type, Integer threshold) {
+    @Test
+    public void testNoRecheckDuringGracePeriod() throws Exception {
+        final MessageCountAlertCondition.ThresholdType type = MessageCountAlertCondition.ThresholdType.LESS;
+        final int grace = 10;
+        final int time = 10;
+
+        final MessageCountAlertCondition messageCountAlertCondition = getMessageCountAlertCondition(
+            getParametersMap(grace, time, MessageCountAlertCondition.ThresholdType.MORE, threshold),
+            alertConditionTitle
+        );
+
+
+        try {
+            verify(searches, never()).count(anyString(), any(TimeRange.class), anyString());
+        } catch (InvalidRangeFormatException e) {
+            assertNull("This should not throw an exception", e);
+        }
+
+        alertLastTriggered(0);
+        assertTrue("Alert condition should be in grace period because grace is greater than zero and alert has just been triggered!",
+            alertService.inGracePeriod(messageCountAlertCondition));
+        final AlertCondition.CheckResult resultJustTriggered = alertService.triggered(messageCountAlertCondition);
+        assertNotTriggered(resultJustTriggered);
+
+        alertLastTriggered(grace * 60 - 1);
+        assertTrue("Alert condition should be in grace period because grace is greater than zero and alert has been triggered during grace period!",
+            alertService.inGracePeriod(messageCountAlertCondition));
+        final AlertCondition.CheckResult resultTriggeredAgo = alertService.triggered(messageCountAlertCondition);
+        assertNotTriggered(resultTriggeredAgo);
+    }
+
+    protected MessageCountAlertCondition getConditionWithParameters(MessageCountAlertCondition.ThresholdType type, Integer threshold) {
         Map<String, Object> parameters = simplestParameterMap(type, threshold);
         return getMessageCountAlertCondition(parameters, alertConditionTitle);
     }
 
-    private Map<String, Object> simplestParameterMap(MessageCountAlertCondition.ThresholdType type, Integer threshold) {
+    protected Map<String, Object> simplestParameterMap(MessageCountAlertCondition.ThresholdType type, Integer threshold) {
         return getParametersMap(0, 0, type, threshold);
     }
 
-    private void searchCountShouldReturn(long count) {
+    protected void searchCountShouldReturn(long count) {
         final CountResult countResult = mock(CountResult.class);
         when(countResult.count()).thenReturn(count);
 
-        when(searches.count(anyString(), any(TimeRange.class), anyString())).thenReturn(countResult);
+        try {
+            when(searches.count(anyString(), any(TimeRange.class), anyString())).thenReturn(countResult);
+        } catch (InvalidRangeFormatException e) {
+            assertNotNull("This should not return an exception!", e);
+        }
     }
 
-    private MessageCountAlertCondition getMessageCountAlertCondition(Map<String, Object> parameters, String title) {
+    protected MessageCountAlertCondition getMessageCountAlertCondition(Map<String, Object> parameters, String title) {
         return new MessageCountAlertCondition(
             searches,
             stream,
@@ -142,7 +169,7 @@ public class MessageCountAlertConditionTest extends AlertConditionTest {
             title);
     }
 
-    private Map<String, Object> getParametersMap(Integer grace, Integer time, MessageCountAlertCondition.ThresholdType type, Number threshold) {
+    protected Map<String, Object> getParametersMap(Integer grace, Integer time, MessageCountAlertCondition.ThresholdType type, Number threshold) {
         Map<String, Object> parameters = super.getParametersMap(grace, time, threshold);
         parameters.put("threshold_type", type.toString());
 

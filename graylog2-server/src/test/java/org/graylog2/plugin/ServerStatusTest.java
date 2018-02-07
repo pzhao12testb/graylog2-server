@@ -17,7 +17,6 @@
 package org.graylog2.plugin;
 
 import com.google.common.eventbus.EventBus;
-import org.graylog2.audit.NullAuditEventSender;
 import org.graylog2.plugin.lifecycles.Lifecycle;
 import org.graylog2.shared.SuppressForbidden;
 import org.joda.time.DateTimeZone;
@@ -25,9 +24,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -46,12 +45,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ServerStatusTest {
     @Rule
     public final TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
-
     @Mock private BaseConfiguration config;
     @Mock private EventBus eventBus;
 
@@ -64,7 +61,7 @@ public class ServerStatusTest {
 
         when(config.getNodeIdFile()).thenReturn(tempFile.getPath());
 
-        status = new ServerStatus(config, Collections.singleton(ServerStatus.Capability.MASTER), eventBus, NullAuditEventSender::new);
+        status = new ServerStatus(config, Collections.singleton(ServerStatus.Capability.MASTER), eventBus);
     }
 
     @Test

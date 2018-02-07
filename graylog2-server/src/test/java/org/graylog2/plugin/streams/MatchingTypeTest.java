@@ -18,7 +18,7 @@ package org.graylog2.plugin.streams;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class MatchingTypeTest {
 

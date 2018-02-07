@@ -16,6 +16,9 @@
  */
 package org.graylog2.plugin;
 
+/**
+ * @author Dennis Oelkers <dennis@torch.sh>
+ */
 public interface Stoppable {
-    void stop();
+    public void stop();
 }

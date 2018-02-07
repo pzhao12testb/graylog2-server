@@ -21,8 +21,7 @@ const ConfigurationsStore = Reflux.createStore({
     const promise = fetch('GET', this._url(`/${configType}`));
     promise.then((response) => {
       this.configuration[configType] = response;
-      this.trigger({ configuration: this.configuration });
-      return response;
+      this.trigger({configuration: this.configuration});
     });
 
     ConfigurationActions.list.promise(promise);
@@ -30,8 +29,7 @@ const ConfigurationsStore = Reflux.createStore({
 
   listSearchesClusterConfig() {
     const promise = fetch('GET', this._url('/org.graylog2.indexer.searches.SearchesClusterConfig')).then((response) => {
-      this.trigger({ searchesClusterConfig: response });
-      return response;
+      this.trigger({searchesClusterConfig: response});
     });
 
     ConfigurationActions.listSearchesClusterConfig.promise(promise);
@@ -40,8 +38,7 @@ const ConfigurationsStore = Reflux.createStore({
   listMessageProcessorsConfig(configType) {
     const promise = fetch('GET', URLUtils.qualifyUrl('/system/messageprocessors/config')).then((response) => {
       this.configuration[configType] = response;
-      this.trigger({ configuration: this.configuration });
-      return response;
+      this.trigger({configuration: this.configuration});
     });
 
     ConfigurationActions.listMessageProcessorsConfig.promise(promise);
@@ -51,13 +48,12 @@ const ConfigurationsStore = Reflux.createStore({
     const promise = fetch('PUT', this._url(`/${configType}`), config);
 
     promise.then(
-      (response) => {
+      response => {
         this.configuration[configType] = response;
-        this.trigger({ configuration: this.configuration });
+        this.trigger({configuration: this.configuration});
         UserNotification.success('Configuration updated successfully');
-        return response;
       },
-      (error) => {
+      error => {
         UserNotification.error(`Search config update failed: ${error}`, `Could not update search config: ${configType}`);
       });
 
@@ -68,13 +64,12 @@ const ConfigurationsStore = Reflux.createStore({
     const promise = fetch('PUT', URLUtils.qualifyUrl('/system/messageprocessors/config'), config);
 
     promise.then(
-      (response) => {
+      response => {
         this.configuration[configType] = response;
-        this.trigger({ configuration: this.configuration });
+        this.trigger({configuration: this.configuration});
         UserNotification.success('Configuration updated successfully');
-        return response;
       },
-      (error) => {
+      error => {
         UserNotification.error(`Message processors config update failed: ${error}`, `Could not update config: ${configType}`);
       });
 

@@ -20,10 +20,7 @@ import com.google.common.collect.Maps;
 import org.graylog2.plugin.configuration.ConfigurationRequest;
 import org.graylog2.plugin.database.ValidationException;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ConfigurationMapConverter {
     /**
@@ -64,13 +61,6 @@ public class ConfigurationMapConverter {
                     break;
                 case "boolean":
                     value = "true".equalsIgnoreCase(String.valueOf(entry.getValue()));
-                    break;
-                case "list":
-                    final List<?> valueList = entry.getValue() == null ? Collections.emptyList() : (List<?>) entry.getValue();
-                    value = valueList.stream()
-                            .filter(o -> o != null && o instanceof String)
-                            .map(String::valueOf)
-                            .collect(Collectors.toList());
                     break;
                 default:
                     throw new ValidationException(field, "Unknown configuration field type \"" + type + "\"");

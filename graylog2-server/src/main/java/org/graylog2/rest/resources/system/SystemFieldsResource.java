@@ -24,9 +24,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.graylog2.indexer.IndexSetRegistry;
 import org.graylog2.indexer.indices.Indices;
-import org.graylog2.plugin.Message;
 import org.graylog2.shared.rest.resources.RestResource;
 import org.graylog2.shared.security.RestPermissions;
 
@@ -45,12 +43,10 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path("/system/fields")
 public class SystemFieldsResource extends RestResource {
     private final Indices indices;
-    private final IndexSetRegistry indexSetRegistry;
 
     @Inject
-    public SystemFieldsResource(Indices indices, IndexSetRegistry indexSetRegistry) {
+    public SystemFieldsResource(Indices indices) {
         this.indices = indices;
-        this.indexSetRegistry = indexSetRegistry;
     }
 
     @GET
@@ -63,16 +59,14 @@ public class SystemFieldsResource extends RestResource {
                                            @QueryParam("limit") int limit) {
         boolean unlimited = limit <= 0;
 
-        final String[] writeIndexWildcards = indexSetRegistry.getIndexWildcards();
-
         final Set<String> fields;
         if (unlimited) {
-            fields = indices.getAllMessageFields(writeIndexWildcards);
+            fields = indices.getAllMessageFields();
         } else {
-            fields = Sets.newHashSetWithExpectedSize(limit);
+            fields = Sets.newHashSet();
             addStandardFields(fields);
             int i = 0;
-            for (String field : indices.getAllMessageFields(writeIndexWildcards)) {
+            for (String field : indices.getAllMessageFields()) {
                 if (i == limit) {
                     break;
                 }
@@ -85,8 +79,8 @@ public class SystemFieldsResource extends RestResource {
     }
 
     private void addStandardFields(Set<String> fields) {
-        fields.add(Message.FIELD_SOURCE);
-        fields.add(Message.FIELD_MESSAGE);
-        fields.add(Message.FIELD_TIMESTAMP);
+        fields.add("source");
+        fields.add("message");
+        fields.add("timestamp");
     }
 }

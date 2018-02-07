@@ -1,8 +1,7 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import { Alert } from 'react-bootstrap';
 
-import { DataTable, ExternalLink, Spinner } from 'components/common';
+import { DataTable, Spinner } from 'components/common';
 
 const InputTypesDataTable = React.createClass({
   propTypes: {
@@ -16,9 +15,9 @@ const InputTypesDataTable = React.createClass({
       <tr key={inputType.type}>
         <td className="limited">{inputType.name}</td>
         <td className="limited">{inputType.type}</td>
-        <td className="limited" style={{ width: 150 }}>
+        <td className="limited" style={{width: 150}}>
           {inputType.link_to_docs &&
-          <ExternalLink href={inputType.link_to_docs}>Documentation</ExternalLink>
+          <a href={inputType.link_to_docs} target="_blank"><i className="fa fa-external-link"/> Documentation</a>
           }
         </td>
       </tr>
@@ -26,13 +25,13 @@ const InputTypesDataTable = React.createClass({
   },
   render() {
     if (!this.props.inputDescriptions) {
-      return <Spinner text="Loading input types..." />;
+      return <Spinner text="Loading input types..."/>;
     }
 
     if (Object.keys(this.props.inputDescriptions).length === 0) {
       return (
         <Alert bsStyle="warning">
-          <i className="fa fa-exclamation-triangle" />&nbsp; Input types are unavailable.
+          <i className="fa fa-exclamation-triangle"/>&nbsp; Input types are unavailable.
         </Alert>
       );
     }
@@ -47,11 +46,11 @@ const InputTypesDataTable = React.createClass({
                  className="table-hover table-condensed table-striped"
                  headers={headers}
                  headerCellFormatter={this._headerCellFormatter}
-                 sortByKey={'name'}
+                 sortByKey={"name"}
                  rows={rows}
                  dataRowFormatter={this._inputTypeFormatter}
                  filterLabel="Filter"
-                 filterKeys={[]} />
+                 filterKeys={[]}/>
     );
   },
 });

@@ -1,13 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 const style = require('!style!css!./ChangedMessageField.css');
 
 const ChangedMessageField = React.createClass({
   propTypes: {
-    fieldName: PropTypes.string.isRequired,
-    originalValue: PropTypes.string,
-    newValue: PropTypes.string,
+    fieldName: React.PropTypes.string.isRequired,
+    originalValue: React.PropTypes.string,
+    newValue: React.PropTypes.string,
   },
   getDefaultProps() {
     return {

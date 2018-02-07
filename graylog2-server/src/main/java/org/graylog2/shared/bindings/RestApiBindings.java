@@ -18,8 +18,10 @@ package org.graylog2.shared.bindings;
 
 import com.google.inject.multibindings.Multibinder;
 import org.graylog2.plugin.inject.Graylog2Module;
+import org.graylog2.shared.rest.RestAccessLogFilter;
 import org.graylog2.shared.security.ShiroSecurityBinding;
 
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
 
 public class RestApiBindings extends Graylog2Module {
@@ -39,7 +41,7 @@ public class RestApiBindings extends Graylog2Module {
     }
 
     private void bindContainerResponseFilters() {
-        jerseyContainerResponseFilterBinder();
+        Multibinder<Class<? extends ContainerResponseFilter>> setBinder = jerseyContainerResponseFilterBinder();
     }
 
 }

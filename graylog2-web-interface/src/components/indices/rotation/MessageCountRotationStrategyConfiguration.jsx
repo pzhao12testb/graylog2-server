@@ -1,12 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Input } from 'components/bootstrap';
+import { Input } from 'react-bootstrap';
 
 const MessageCountRotationStrategyConfiguration = React.createClass({
   propTypes: {
-    config: PropTypes.object.isRequired,
-    jsonSchema: PropTypes.object.isRequired,
-    updateConfig: PropTypes.func.isRequired,
+    config: React.PropTypes.object.isRequired,
+    jsonSchema: React.PropTypes.object.isRequired,
+    updateConfig: React.PropTypes.func.isRequired,
   },
 
   getInitialState() {
@@ -29,13 +28,13 @@ const MessageCountRotationStrategyConfiguration = React.createClass({
     return (
       <div>
         <fieldset>
-
           <Input type="number"
                  id="max-docs-per-index"
                  label="Max documents per index"
                  onChange={this._onInputUpdate('max_docs_per_index')}
                  value={this.state.max_docs_per_index}
                  help="Maximum number of documents in an index before it gets rotated"
+                 autoFocus
                  required />
         </fieldset>
       </div>

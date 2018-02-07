@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import AddToDashboardMenu from 'components/dashboard/AddToDashboardMenu';
 
 const AddSearchCountToDashboard = React.createClass({
@@ -17,7 +16,7 @@ const AddSearchCountToDashboard = React.createClass({
       <AddToDashboardMenu title="Add count to dashboard"
                           pullRight={this.props.pullRight}
                           widgetType={this.props.searchInStream ? this.STREAM_SEARCH_COUNT_WIDGET_TYPE : this.SEARCH_COUNT_WIDGET_TYPE}
-                          permissions={this.props.permissions} />
+                          permissions={this.props.permissions}/>
     );
   },
 });

@@ -43,10 +43,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +60,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ClusterEventPeriodicalTest {
     @ClassRule
     public static final InMemoryMongoDb IN_MEMORY_MONGO_DB = newInMemoryMongoDbRule().build();
@@ -67,8 +68,6 @@ public class ClusterEventPeriodicalTest {
 
     @Rule
     public MongoConnectionRule mongoRule = MongoConnectionRule.build("test");
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     private final ObjectMapper objectMapper = new ObjectMapperProvider().get();
 
@@ -94,6 +93,7 @@ public class ClusterEventPeriodicalTest {
                 provider,
                 mongoRule.getMongoConnection(),
                 nodeId,
+                objectMapper,
                 new ChainingClassLoader(getClass().getClassLoader()),
                 serverEventBus,
                 clusterEventBus
@@ -103,7 +103,6 @@ public class ClusterEventPeriodicalTest {
     @After
     public void tearDown() {
         DateTimeUtils.setCurrentMillisSystem();
-        mongoConnection.getMongoDatabase().drop();
     }
 
     @Test

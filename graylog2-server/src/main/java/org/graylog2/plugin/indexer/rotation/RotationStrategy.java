@@ -16,10 +16,8 @@
  */
 package org.graylog2.plugin.indexer.rotation;
 
-import org.graylog2.indexer.IndexSet;
-
 public interface RotationStrategy {
-    void rotate(IndexSet indexSet);
+    void rotate();
 
     Class<? extends RotationStrategyConfig> configurationClass();
 

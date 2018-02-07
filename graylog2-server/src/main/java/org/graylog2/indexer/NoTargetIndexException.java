@@ -16,5 +16,16 @@
  */
 package org.graylog2.indexer;
 
-public class NoTargetIndexException extends ElasticsearchException {
+/**
+ * @author Lennart Koopmann <lennart@socketfeed.com>
+ */
+public class NoTargetIndexException extends Exception {
+    
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3668313533085961019L;
+
+	public NoTargetIndexException() {}
+    
 }

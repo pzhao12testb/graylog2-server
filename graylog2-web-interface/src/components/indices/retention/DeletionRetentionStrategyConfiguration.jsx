@@ -1,12 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Input } from 'components/bootstrap';
+import { Input } from 'react-bootstrap';
 
 const DeletionRetentionStrategyConfiguration = React.createClass({
   propTypes: {
-    config: PropTypes.object.isRequired,
-    jsonSchema: PropTypes.object.isRequired,
-    updateConfig: PropTypes.func.isRequired,
+    config: React.PropTypes.object.isRequired,
+    jsonSchema: React.PropTypes.object.isRequired,
+    updateConfig: React.PropTypes.func.isRequired,
   },
 
   getInitialState() {
@@ -35,6 +34,7 @@ const DeletionRetentionStrategyConfiguration = React.createClass({
                  onChange={this._onInputUpdate('max_number_of_indices')}
                  value={this.state.max_number_of_indices}
                  help={<span>Maximum number of indices to keep before <strong>deleting</strong> the oldest ones</span>}
+                 autoFocus
                  required />
         </fieldset>
       </div>

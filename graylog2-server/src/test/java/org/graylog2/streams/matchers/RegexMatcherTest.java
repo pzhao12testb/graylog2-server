@@ -21,8 +21,6 @@ import org.graylog2.plugin.streams.StreamRule;
 import org.graylog2.plugin.streams.StreamRuleType;
 import org.junit.Test;
 
-import java.util.Collections;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -146,19 +144,6 @@ public class RegexMatcherTest extends MatcherTest {
         assertTrue(matcher.match(msg, rule));
     }
 
-    @Test
-    public void testSuccessfulMatchInArray() {
-        StreamRule rule = getSampleRule();
-        rule.setValue("foobar");
-
-        Message msg = getSampleMessage();
-        msg.addField("something", Collections.singleton("foobar"));
-
-        StreamRuleMatcher matcher = getMatcher(rule);
-        assertTrue(matcher.match(msg, rule));
-    }
-
-    @Override
     protected StreamRule getSampleRule() {
         StreamRule rule = super.getSampleRule();
         rule.setType(StreamRuleType.REGEX);
@@ -166,7 +151,6 @@ public class RegexMatcherTest extends MatcherTest {
         return rule;
     }
 
-    @Override
     protected StreamRuleMatcher getMatcher(StreamRule rule) {
         StreamRuleMatcher matcher = super.getMatcher(rule);
 

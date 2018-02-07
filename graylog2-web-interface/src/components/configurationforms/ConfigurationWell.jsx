@@ -1,21 +1,14 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 const ConfigurationWell = React.createClass({
   propTypes: {
-    id: PropTypes.string,
-    configuration: PropTypes.any,
-    typeDefinition: PropTypes.object,
+    id: React.PropTypes.string,
+    configuration: React.PropTypes.any,
+    typeDefinition: React.PropTypes.object,
   },
   PASSWORD_PLACEHOLDER: '********',
   _formatRegularField(value, key) {
-    let finalValue;
-    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-      finalValue = <i>{'<empty>'}</i>;
-    } else {
-      finalValue = Array.isArray(value) ? value.join(', ') : String(value);
-    }
-
+    const finalValue = (value === null || value === undefined || value === '' ? <i>{'<empty>'}</i> : String(value));
     return (<li key={`${this.props.id}-${key}`}><div className="key">{key}:</div> <div className="value">{finalValue}</div></li>);
   },
   _formatPasswordField(value, key) {

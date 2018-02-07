@@ -16,18 +16,26 @@
  */
 package org.graylog2.indexer.results;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.unit.TimeValue;
 import org.graylog2.indexer.searches.Searches;
-import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.indexer.searches.timeranges.AbsoluteRange;
+import org.graylog2.plugin.Tools;
 
 import java.util.Map;
 
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
 public abstract class HistogramResult extends IndexQueryResult {
 
     private AbsoluteRange boundaries;
 
-    public HistogramResult(String originalQuery, String builtQuery, long tookMs) {
-        super(originalQuery, builtQuery, tookMs);
+    public HistogramResult(String originalQuery, BytesReference builtQuery, TimeValue took) {
+        super(originalQuery, builtQuery, took);
     }
 
     public abstract Searches.DateHistogramInterval getInterval();
@@ -39,7 +47,15 @@ public abstract class HistogramResult extends IndexQueryResult {
      */
     public AbsoluteRange getHistogramBoundaries() {
         if (boundaries == null) {
-            boundaries = Tools.extractHistogramBoundaries(getBuiltQuery()).orElse(null);
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonParser jp = mapper.getFactory().createParser(getBuiltQuery());
+                JsonNode rootNode = mapper.readTree(jp);
+                JsonNode timestampNode = rootNode.findValue("range").findValue("timestamp");
+                String from = Tools.elasticSearchTimeFormatToISO8601(timestampNode.findValue("from").asText());
+                String to = Tools.elasticSearchTimeFormatToISO8601(timestampNode.findValue("to").asText());
+                boundaries = AbsoluteRange.create(from, to);
+            } catch (Exception ignored) {}
         }
 
         return boundaries;

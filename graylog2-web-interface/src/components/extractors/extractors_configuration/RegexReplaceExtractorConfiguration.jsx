@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { Button, Col, Row } from 'react-bootstrap';
+import React, {PropTypes} from 'react';
+import {Input, Button} from 'react-bootstrap';
 
-import { Input } from 'components/bootstrap';
 import DocumentationLink from 'components/support/DocumentationLink';
 import DocsHelper from 'util/DocsHelper';
 
@@ -33,12 +31,12 @@ const RegexReplaceExtractorConfiguration = React.createClass({
     };
   },
   _onTryClick() {
-    this.setState({ trying: true });
+    this.setState({trying: true});
 
     const configuration = this.props.configuration;
     const promise = ToolsStore.testRegexReplace(configuration.regex, configuration.replacement,
       configuration.replace_all, this.props.exampleMessage);
-    promise.then((result) => {
+    promise.then(result => {
       if (!result.matched) {
         UserNotification.warning('Regular expression did not match.');
         return;
@@ -53,7 +51,7 @@ const RegexReplaceExtractorConfiguration = React.createClass({
       this.props.onExtractorPreviewLoad(preview);
     });
 
-    promise.finally(() => this.setState({ trying: false }));
+    promise.finally(() => this.setState({trying: false}));
   },
   _isTryButtonDisabled() {
     return this.state.trying || !this.props.configuration.regex || !this.props.configuration.replacement || !this.props.exampleMessage;
@@ -62,7 +60,7 @@ const RegexReplaceExtractorConfiguration = React.createClass({
     const regexHelpMessage = (
       <span>
           The regular expression used for extraction.{' '}
-        Learn more in the <DocumentationLink page={DocsHelper.PAGES.EXTRACTORS} text="documentation" />.
+        Learn more in the <DocumentationLink page={DocsHelper.PAGES.EXTRACTORS} text="documentation"/>.
         </span>
     );
 
@@ -85,7 +83,7 @@ const RegexReplaceExtractorConfiguration = React.createClass({
                wrapperClassName="col-md-10"
                defaultValue={this.props.configuration.regex}
                required
-               help={regexHelpMessage} />
+               help={regexHelpMessage}/>
 
         <Input type="text"
                id="replacement"
@@ -96,7 +94,7 @@ const RegexReplaceExtractorConfiguration = React.createClass({
                wrapperClassName="col-md-10"
                defaultValue={this.props.configuration.replacement}
                required
-               help={replacementHelpMessage} />
+               help={replacementHelpMessage}/>
 
         <Input type="checkbox"
                id="replace_all"
@@ -104,15 +102,13 @@ const RegexReplaceExtractorConfiguration = React.createClass({
                wrapperClassName="col-md-offset-2 col-md-10"
                defaultChecked={this.props.configuration.replace_all}
                onChange={this._onChange('replace_all')}
-               help="Whether to replace all occurrences of the given pattern or only the first occurrence." />
+               help="Whether to replace all occurrences of the given pattern or only the first occurrence."/>
 
-        <Row>
-          <Col mdOffset={2} md={10}>
-            <Button bsStyle="info" onClick={this._onTryClick} disabled={this._isTryButtonDisabled()}>
-              {this.state.trying ? <i className="fa fa-spin fa-spinner" /> : 'Try'}
-            </Button>
-          </Col>
-        </Row>
+        <Input wrapperClassName="col-md-offset-2 col-md-10">
+          <Button bsStyle="info" onClick={this._onTryClick} disabled={this._isTryButtonDisabled()}>
+            {this.state.trying ? <i className="fa fa-spin fa-spinner"/> : 'Try'}
+          </Button>
+        </Input>
       </div>
     );
   },

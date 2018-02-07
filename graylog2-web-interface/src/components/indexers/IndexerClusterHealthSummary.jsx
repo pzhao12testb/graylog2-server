@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Alert } from 'react-bootstrap';
 
@@ -7,7 +6,7 @@ import DocsHelper from 'util/DocsHelper';
 
 const IndexerClusterHealthSummary = React.createClass({
   propTypes: {
-    health: PropTypes.object.isRequired,
+    health: React.PropTypes.object.isRequired,
   },
   _alertClassForHealth(health) {
     switch (health.status) {
@@ -18,7 +17,7 @@ const IndexerClusterHealthSummary = React.createClass({
     }
   },
   _formatTextForHealth(health) {
-    const text = `Elasticsearch cluster is ${health.status}.`;
+    const text = 'Elasticsearch cluster is ' + health.status + '.';
     switch (health.status) {
       case 'green': return text;
       case 'yellow':
@@ -38,13 +37,13 @@ const IndexerClusterHealthSummary = React.createClass({
     const { health } = this.props;
     return (
       <Alert bsStyle={this._alertClassForHealth(health)} className="es-cluster-status">
-        <i className={`fa fa-${this._iconNameForHealth(health)}`} /> &nbsp;{this._formatTextForHealth(health)}{' '}
+        <i className={'fa fa-' + this._iconNameForHealth(health)}/> &nbsp;{this._formatTextForHealth(health)}{' '}
         Shards:{' '}
         {health.shards.active} active,{' '}
         {health.shards.initializing} initializing,{' '}
         {health.shards.relocating} relocating,{' '}
         {health.shards.unassigned} unassigned,{' '}
-        <DocumentationLink page={DocsHelper.PAGES.CLUSTER_STATUS_EXPLAINED} text="What does this mean?" />
+        <DocumentationLink page={DocsHelper.PAGES.CLUSTER_STATUS_EXPLAINED} text="What does this mean?"/>
       </Alert>
     );
   },

@@ -17,12 +17,10 @@
 package org.graylog2.shared.rest.resources.documentation;
 
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.graylog2.configuration.HttpConfiguration;
+import org.graylog2.plugin.BaseConfiguration;
 import org.graylog2.plugin.rest.PluginRestResource;
 import org.graylog2.rest.RestTools;
 import org.graylog2.shared.plugins.PluginRestResourceClasses;
@@ -39,44 +37,40 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Objects.requireNonNull;
-import static org.graylog2.shared.initializers.JerseyService.PLUGIN_PREFIX;
+import static org.graylog2.shared.initializers.RestApiService.PLUGIN_PREFIX;
 
 @Api(value = "Documentation", description = "Documentation of this API in JSON format.")
 @Path("/api-docs")
 public class DocumentationResource extends RestResource {
 
-    private final Generator generator;
-    private final HttpConfiguration httpConfiguration;
+    private BaseConfiguration configuration;
+    private final Set<String> restControllerPackages = new HashSet<>();
+    private final Map<Class<?>, String> pluginRestControllerMapping = new HashMap<>();
 
     @Inject
-    public DocumentationResource(HttpConfiguration httpConfiguration,
+    public DocumentationResource(BaseConfiguration configuration,
                                  @Named("RestControllerPackages") String[] restControllerPackages,
-                                 ObjectMapper objectMapper,
                                  PluginRestResourceClasses pluginRestResourceClasses) {
 
-        this.httpConfiguration = requireNonNull(httpConfiguration, "httpConfiguration");
+        this.configuration = configuration;
 
-        final ImmutableSet.Builder<String> packageNames = ImmutableSet.<String>builder()
-                .add(restControllerPackages);
+        this.restControllerPackages.addAll(Arrays.asList(restControllerPackages));
 
         // All plugin resources get the plugin prefix + the plugin package.
-        final Map<Class<?>, String> pluginRestControllerMapping = new HashMap<>();
         for (Map.Entry<String, Set<Class<? extends PluginRestResource>>> entry : pluginRestResourceClasses.getMap().entrySet()) {
             final String pluginPackage = entry.getKey();
-            packageNames.add(pluginPackage);
+            this.restControllerPackages.add(pluginPackage);
 
             for (Class<? extends PluginRestResource> pluginRestResource : entry.getValue()) {
-                pluginRestControllerMapping.put(pluginRestResource, pluginPackage);
+                this.pluginRestControllerMapping.put(pluginRestResource, pluginPackage);
             }
         }
-
-        this.generator = new Generator(packageNames.build(), pluginRestControllerMapping, PLUGIN_PREFIX, objectMapper);
     }
 
     @GET
@@ -84,7 +78,7 @@ public class DocumentationResource extends RestResource {
     @ApiOperation(value = "Get API documentation")
     @Produces(MediaType.APPLICATION_JSON)
     public Response overview() {
-        return buildSuccessfulCORSResponse(generator.generateOverview());
+        return buildSuccessfulCORSResponse(new Generator(restControllerPackages, pluginRestControllerMapping, PLUGIN_PREFIX, objectMapper).generateOverview());
     }
 
     @GET
@@ -95,8 +89,10 @@ public class DocumentationResource extends RestResource {
     public Response route(@ApiParam(name = "route", value = "Route to fetch. For example /system", required = true)
                           @PathParam("route") String route,
                           @Context HttpHeaders httpHeaders) {
-        final URI baseUri = RestTools.buildExternalUri(httpHeaders.getRequestHeaders(), httpConfiguration.getHttpExternalUri()).resolve(HttpConfiguration.PATH_API);
-        return buildSuccessfulCORSResponse(generator.generateForRoute(route, baseUri.toString()));
+        final String basePath = RestTools.buildEndpointUri(httpHeaders, configuration.getWebEndpointUri());
+        return buildSuccessfulCORSResponse(
+                new Generator(restControllerPackages, pluginRestControllerMapping, PLUGIN_PREFIX, objectMapper).generateForRoute(route, basePath)
+        );
     }
 
     private Response buildSuccessfulCORSResponse(Map<String, Object> result) {

@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,12 +99,14 @@ public class PersistedServiceImpl implements PersistedService {
 
     protected <T extends Persisted> DBCollection collection(Class<T> modelClass) {
         CollectionName collectionNameAnnotation = modelClass.getAnnotation(CollectionName.class);
-        if (collectionNameAnnotation == null) {
+        if (collectionNameAnnotation == null)
             throw new RuntimeException("Unable to determine collection for class " + modelClass.getCanonicalName());
-        }
-        final String collectionName = collectionNameAnnotation.value();
+        final String collectionName = (collectionNameAnnotation == null ? null : collectionNameAnnotation.value());
 
-        return collection(collectionName);
+        if (collectionName == null)
+            return null;
+        else
+            return collection(collectionName);
     }
 
     protected <T extends Persisted> DBCollection collection(T model) {
@@ -113,15 +114,21 @@ public class PersistedServiceImpl implements PersistedService {
     }
 
     protected List<DBObject> cursorToList(DBCursor cursor) {
+        List<DBObject> results = Lists.newArrayList();
+
         if (cursor == null) {
-            return Collections.emptyList();
+            return results;
         }
 
         try {
-            return Lists.newArrayList((Iterable<DBObject>) cursor);
+            while (cursor.hasNext()) {
+                results.add(cursor.next());
+            }
         } finally {
             cursor.close();
         }
+
+        return results;
     }
 
     protected <T extends Persisted> DBObject findOne(Class<T> model, DBObject query) {
@@ -198,9 +205,9 @@ public class PersistedServiceImpl implements PersistedService {
     public <T extends Persisted> String saveWithoutValidation(T model) {
         try {
             return save(model);
-        } catch (ValidationException ignored) {
-            return null;
-        }
+        } catch (ValidationException e) { /* */ }
+
+        return null;
     }
 
     @Override
@@ -210,11 +217,11 @@ public class PersistedServiceImpl implements PersistedService {
 
     @Override
     public Map<String, List<ValidationResult>> validate(Map<String, Validator> validators, Map<String, Object> fields) {
+        Map<String, List<ValidationResult>> validationErrors = new HashMap<>();
         if (validators == null || validators.isEmpty()) {
-            return Collections.emptyMap();
+            return validationErrors;
         }
 
-        final Map<String, List<ValidationResult>> validationErrors = new HashMap<>();
         for (Map.Entry<String, Validator> validation : validators.entrySet()) {
             Validator v = validation.getValue();
             String field = validation.getKey();
@@ -223,13 +230,15 @@ public class PersistedServiceImpl implements PersistedService {
                 ValidationResult validationResult = v.validate(fields.get(field));
                 if (validationResult instanceof ValidationResult.ValidationFailed) {
                     LOG.debug("Validation failure: [{}] on field [{}]", v.getClass().getCanonicalName(), field);
-                    validationErrors.computeIfAbsent(field, k -> new ArrayList<>());
+                    if (validationErrors.get(field) == null)
+                        validationErrors.put(field, new ArrayList<ValidationResult>());
                     validationErrors.get(field).add(validationResult);
                 }
             } catch (Exception e) {
                 final String error = "Error while trying to validate <" + field + ">, got exception: " + e;
                 LOG.debug(error);
-                validationErrors.computeIfAbsent(field, k -> new ArrayList<>());
+                if (validationErrors.get(field) == null)
+                    validationErrors.put(field, new ArrayList<ValidationResult>());
                 validationErrors.get(field).add(new ValidationResult.ValidationFailed(error));
             }
         }

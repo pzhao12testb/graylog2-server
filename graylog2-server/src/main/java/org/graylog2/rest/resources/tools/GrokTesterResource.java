@@ -22,16 +22,15 @@ import oi.thekraken.grok.api.Grok;
 import oi.thekraken.grok.api.Match;
 import oi.thekraken.grok.api.exception.GrokException;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
-import org.graylog2.audit.jersey.NoAuditEvent;
 import org.graylog2.grok.GrokPattern;
 import org.graylog2.grok.GrokPatternService;
 import org.graylog2.rest.models.tools.requests.GrokTestRequest;
 import org.graylog2.rest.resources.tools.responses.GrokTesterResponse;
 import org.graylog2.shared.rest.resources.RestResource;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -70,7 +69,6 @@ public class GrokTesterResource extends RestResource {
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @NoAuditEvent("only used to test Grok patterns")
     public GrokTesterResponse testGrok(@Valid @NotNull GrokTestRequest grokTestRequest) throws GrokException {
         return doTestGrok(grokTestRequest.string(), grokTestRequest.pattern(), grokTestRequest.namedCapturesOnly());
     }
@@ -80,7 +78,7 @@ public class GrokTesterResource extends RestResource {
 
         final Grok grok = new Grok();
         for (GrokPattern grokPattern : grokPatterns) {
-            grok.addPattern(grokPattern.name(), grokPattern.pattern());
+            grok.addPattern(grokPattern.name, grokPattern.pattern);
         }
 
         grok.compile(pattern, namedCapturesOnly);

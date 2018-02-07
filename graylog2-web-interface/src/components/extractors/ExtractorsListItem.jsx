@@ -1,13 +1,15 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { Button, Row, Col, Well } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import React, {PropTypes} from 'react';
+import {Button, Row, Col, Well} from 'react-bootstrap';
+import {LinkContainer} from 'react-router-bootstrap';
 import numeral from 'numeral';
+
 import EntityListItem from 'components/common/EntityListItem';
 import ExtractorUtils from 'util/ExtractorUtils';
+
 import ActionsProvider from 'injection/ActionsProvider';
-import Routes from 'routing/Routes';
 const ExtractorsActions = ActionsProvider.getActions('Extractors');
+
+import Routes from 'routing/Routes';
 
 const ExtractorsListItem = React.createClass({
   propTypes: {
@@ -21,7 +23,7 @@ const ExtractorsListItem = React.createClass({
     };
   },
   _toggleDetails() {
-    this.setState({ showDetails: !this.state.showDetails });
+    this.setState({showDetails: !this.state.showDetails});
   },
   _deleteExtractor() {
     if (window.confirm(`Really remove extractor "${this.props.extractor.title}?"`)) {
@@ -40,7 +42,7 @@ const ExtractorsListItem = React.createClass({
   },
   _formatCondition() {
     if (this.props.extractor.condition_type === 'none') {
-      return <div />;
+      return <div></div>;
     }
 
     return (
@@ -62,21 +64,21 @@ const ExtractorsListItem = React.createClass({
     actions.push(
       <Button key={`extractor-details-${this.props.extractor.id}`} bsStyle="info" onClick={this._toggleDetails}>
         Details
-      </Button>,
+      </Button>
     );
     actions.push(
       <LinkContainer key={`edit-extractor-${this.props.extractor.id}`}
                      to={Routes.edit_input_extractor(this.props.nodeId, this.props.inputId, this.props.extractor.id)}>
         <Button bsStyle="info">Edit</Button>
-      </LinkContainer>,
+      </LinkContainer>
     );
-    actions.push(<Button key={'delete-extractor-'} bsStyle="danger" onClick={this._deleteExtractor}>Delete</Button>);
+    actions.push(<Button key={`delete-extractor-`} bsStyle="danger" onClick={this._deleteExtractor}>Delete</Button>);
 
     return actions;
   },
   _formatOptions(options) {
     const attributes = Object.keys(options);
-    return attributes.map((attribute) => {
+    return attributes.map(attribute => {
       return <li key={`${attribute}-${this.props.extractor.id}`}>{attribute}: {options[attribute]}</li>;
     });
   },
@@ -107,7 +109,7 @@ const ExtractorsListItem = React.createClass({
     const converterKeys = Object.keys(converters);
     const formattedConverters = converterKeys.map(converterKey => this._formatConverter(converterKey, converters[converterKey]));
     if (formattedConverters.length === 0) {
-      return <div />;
+      return <div></div>;
     }
 
     return (
@@ -149,7 +151,7 @@ const ExtractorsListItem = React.createClass({
     let totalRate;
     if (metrics.total.rate) {
       totalRate = (
-        <div className="meter" style={{ marginBottom: 10 }}>
+        <div className="meter" style={{marginBottom: 10}}>
           {numeral(metrics.total.rate.total).format('0,0')} total invocations since boot,{' '}
           averages:{' '}
           {numeral(metrics.total.rate.one_minute).format('0,0.[00]')},{' '}
@@ -159,32 +161,11 @@ const ExtractorsListItem = React.createClass({
       );
     }
 
-    const conditionCounts = (
-      <div className="meter" style={{ marginBottom: 10 }}>
-        {metrics.condition_hits} hits,{' '}
-        {metrics.condition_misses} misses
-      </div>
-    );
-
     let totalTime;
     if (metrics.total.time) {
       totalTime = this._formatTimingMetrics(metrics.total.time);
     } else {
       totalTime = 'No message passed through here yet.';
-    }
-
-    let conditionTime;
-    if (metrics.condition.time) {
-      conditionTime = this._formatTimingMetrics(metrics.condition.time);
-    } else {
-      conditionTime = 'No message passed through here yet.';
-    }
-
-    let executionTime;
-    if (metrics.execution.time) {
-      executionTime = this._formatTimingMetrics(metrics.execution.time);
-    } else {
-      executionTime = 'No message passed through here yet.';
     }
 
     let convertersTime;
@@ -197,22 +178,14 @@ const ExtractorsListItem = React.createClass({
     return (
       <div>
         {totalRate}
-        {conditionCounts}
         <Row>
           <Col md={6}>
-            <h4 style={{ display: 'inline' }}>Total time</h4><br />
+            <h3 style={{display: 'inline'}}>Total time</h3><br />
             {totalTime}
           </Col>
+
           <Col md={6}>
-            <h4 style={{ display: 'inline' }}>Condition time</h4><br />
-            {conditionTime}
-          </Col>
-          <Col md={6}>
-            <h4 style={{ display: 'inline' }}>Execution time</h4><br />
-            {executionTime}
-          </Col>
-          <Col md={6}>
-            <h4 style={{ display: 'inline' }}>Converter time</h4><br />
+            <h3 style={{display: 'inline'}}>Converter time</h3><br />
             {convertersTime}
           </Col>
         </Row>

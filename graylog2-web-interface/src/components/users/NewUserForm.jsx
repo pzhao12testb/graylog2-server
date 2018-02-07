@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { Alert, Row, Col, Button } from 'react-bootstrap';
+import { Row, Col, Input, Button } from 'react-bootstrap';
 
-import { Input } from 'components/bootstrap';
 import RolesSelect from 'components/users/RolesSelect';
 import TimeoutInput from 'components/users/TimeoutInput';
 import { TimezoneSelect } from 'components/common';
@@ -14,20 +12,19 @@ import ValidationsUtils from 'util/ValidationsUtils';
 
 const NewUserForm = React.createClass({
   propTypes: {
-    roles: PropTypes.array.isRequired,
-    onSubmit: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired,
+    roles: React.PropTypes.array.isRequired,
+    onSubmit: React.PropTypes.func.isRequired,
+    onCancel: React.PropTypes.func.isRequired,
   },
 
   getInitialState() {
     return {
       users: [],
-      newRoles: null,
     };
   },
 
   componentDidMount() {
-    UsersStore.loadUsers().then((users) => {
+    UsersStore.loadUsers().then(users => {
       this.setState({ users });
     });
   },
@@ -60,11 +57,6 @@ const NewUserForm = React.createClass({
     this.props.onSubmit(result);
   },
 
-  _onValueChange(newRoles) {
-    const roles = newRoles.split(',');
-    this.setState({ newRoles: roles });
-  },
-
   render() {
     const rolesHelp = (
       <span className="help-block">
@@ -73,13 +65,6 @@ const NewUserForm = React.createClass({
         The <em>Admin</em> role grants access to everything in Graylog.
       </span>
     );
-    const roles = this.state.newRoles;
-    let rolesAlert = null;
-    if (roles != null && !(roles.includes('Reader') || roles.includes('Admin'))) {
-      rolesAlert = (<Alert bsStyle="danger" role="alert">
-        You need to select at least one of the <em>Reader</em> or <em>Admin</em> roles.
-      </Alert>);
-    }
     return (
       <form id="create-user-form" className="form-horizontal" onSubmit={this._onSubmit}>
         <Input ref="username" name="username" id="username" type="text" maxLength={100}
@@ -95,11 +80,9 @@ const NewUserForm = React.createClass({
                labelClassName="col-sm-2" wrapperClassName="col-sm-10"
                label="Email Address" help="Give the contact email address." required />
 
-        <Input id="password-field"
-               label="Password"
+        <Input label="Password"
                help="Passwords must be at least 6 characters long. We recommend using a strong password."
-               labelClassName="col-sm-2"
-               wrapperClassName="col-sm-10">
+               labelClassName="col-sm-2" wrapperClassName="col-sm-10">
           <Row>
             <Col sm={6}>
               <input className="form-control" ref="password" name="password" id="password" type="password"
@@ -112,31 +95,21 @@ const NewUserForm = React.createClass({
           </Row>
         </Input>
 
-        <Input id="roles-select"
-               label="Roles"
-               help={rolesHelp}
-               labelClassName="col-sm-2"
-               wrapperClassName="col-sm-10">
-          <span>
-            <RolesSelect ref="roles" availableRoles={this.props.roles} userRoles={['Reader']}
-                         className="form-control" onValueChange={this._onValueChange} />
-            {rolesAlert}
-          </span>
+        <Input label="Roles" help={rolesHelp}
+               labelClassName="col-sm-2" wrapperClassName="col-sm-10">
+          <RolesSelect ref="roles" availableRoles={this.props.roles} userRoles={['Reader']} className="form-control" />
         </Input>
 
         <TimeoutInput ref="session_timeout_ms" />
 
-        <Input id="timezone-select"
-               label="Time Zone"
-               help="Choose the timezone to use to display times, or leave it as it is to use the system's default."
-               labelClassName="col-sm-2"
-               wrapperClassName="col-sm-10">
+        <Input label="Time Zone" help="Choose the timezone to use to display times, or leave it as it is to use the system's default."
+               labelClassName="col-sm-2" wrapperClassName="col-sm-10">
           <TimezoneSelect ref="timezone" className="timezone-select" />
         </Input>
 
         <div className="form-group">
           <Col smOffset={2} sm={10}>
-            <Button type="submit" bsStyle="primary" className="create-user save-button-margin" disabled={!!rolesAlert}>
+            <Button type="submit" bsStyle="primary" className="create-user save-button-margin">
               Create User
             </Button>
             <Button onClick={this.props.onCancel}>Cancel</Button>

@@ -1,16 +1,14 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Col, Row } from 'react-bootstrap';
 import Immutable from 'immutable';
 import MessageDetail from './MessageDetail';
-import StringUtils from 'util/StringUtils';
 
 const MessageShow = React.createClass({
   propTypes: {
-    message: PropTypes.object,
-    inputs: PropTypes.object,
-    streams: PropTypes.object,
-    nodes: PropTypes.object,
+    message: React.PropTypes.object,
+    inputs: React.PropTypes.object,
+    streams: React.PropTypes.object,
+    nodes: React.PropTypes.object,
   },
 
   getInitialState() {
@@ -30,7 +28,7 @@ const MessageShow = React.createClass({
 
   possiblyHighlight(fieldName) {
     // No highlighting for the message details view.
-    return StringUtils.stringify(this.props.message.fields[fieldName]);
+    return String(this.props.message.fields[fieldName]);
   },
   render() {
     return (
@@ -41,7 +39,7 @@ const MessageShow = React.createClass({
                                          streams={this.state.streams}
                                          nodes={this.state.nodes}
                                          possiblyHighlight={this.possiblyHighlight}
-                                         showTimestamp />
+                                         showTimestamp/>
         </Col>
       </Row>
     );

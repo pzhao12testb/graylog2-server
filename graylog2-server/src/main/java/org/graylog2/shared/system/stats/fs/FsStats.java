@@ -19,14 +19,12 @@ package org.graylog2.shared.system.stats.fs;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
-import org.graylog.autovalue.WithBeanGetter;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
 @JsonAutoDetect
 @AutoValue
-@WithBeanGetter
 public abstract class FsStats {
     @JsonProperty
     public abstract Map<String, Filesystem> filesystems();
@@ -37,7 +35,6 @@ public abstract class FsStats {
 
     @JsonAutoDetect
     @AutoValue
-    @WithBeanGetter
     public abstract static class Filesystem {
         @JsonProperty
         public abstract String path();

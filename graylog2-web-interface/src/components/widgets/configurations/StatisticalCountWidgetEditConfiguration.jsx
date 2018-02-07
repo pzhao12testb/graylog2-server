@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { Input } from 'components/bootstrap';
+import React, {PropTypes} from 'react';
+import { Input } from 'react-bootstrap';
 
 import { QueryConfiguration, CountWidgetEditConfiguration } from 'components/widgets/configurations';
 
@@ -17,7 +16,7 @@ const StatisticalCountWidgetConfiguration = React.createClass({
 
     return (
       <fieldset>
-        <QueryConfiguration {...this.props} />
+        <QueryConfiguration {...this.props}/>
         <Input key="statsCountStatisticalFunction"
                type="select"
                id="count-statistical-function"
@@ -34,7 +33,7 @@ const StatisticalCountWidgetConfiguration = React.createClass({
             );
           })}
         </Input>
-        <CountWidgetEditConfiguration {...this.props} showQueryConfig={false} />
+        <CountWidgetEditConfiguration {...this.props} showQueryConfig={false}/>
       </fieldset>
     );
   },

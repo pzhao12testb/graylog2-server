@@ -1,10 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Col, Row } from 'react-bootstrap';
 
 import { AddSearchCountToDashboard, SavedSearchControls, ShowQueryModal } from 'components/search';
 import AddToDashboardMenu from 'components/dashboard/AddToDashboardMenu';
-import { ContactUs, DocumentationLink } from 'components/support';
+import DocumentationLink from 'components/support/DocumentationLink';
 
 import DocsHelper from 'util/DocsHelper';
 
@@ -13,10 +12,10 @@ const SearchStore = StoreProvider.getStore('Search');
 
 const NoSearchResults = React.createClass({
   propTypes: {
-    builtQuery: PropTypes.string,
-    histogram: PropTypes.object.isRequired,
-    permissions: PropTypes.array.isRequired,
-    searchInStream: PropTypes.object,
+    builtQuery: React.PropTypes.string,
+    histogram: React.PropTypes.object.isRequired,
+    permissions: React.PropTypes.array.isRequired,
+    searchInStream: React.PropTypes.object,
   },
 
   componentDidMount() {
@@ -85,7 +84,33 @@ const NoSearchResults = React.createClass({
             </p>
           </Col>
         </Row>
-        <ContactUs />
+        <Row className="content">
+          <Col md={12}>
+            <div className="support-sources">
+              <h2>Need help?</h2>
+              <p>
+                Do not hesitate to consult the Graylog community if your questions are not answered in the{' '}
+                <DocumentationLink page={DocsHelper.PAGES.WELCOME} text="documentation" />.
+              </p>
+
+              <ul>
+                <li>
+                  <i className="fa fa-group"/>&nbsp;
+                  <a href="https://www.graylog.org/community-support/" target="_blank">Community support</a>
+                </li>
+                <li>
+                  <i className="fa fa-github-alt"/>&nbsp;
+                  <a href="https://github.com/Graylog2/graylog2-server/issues" target="_blank">Issue tracker</a>
+                </li>
+                <li>
+                  <i className="fa fa-heart"/>&nbsp;
+                  <a href="https://www.graylog.org/professional-support" target="_blank">Professional support</a>
+                </li>
+              </ul>
+            </div>
+
+          </Col>
+        </Row>
       </div>
     );
   },

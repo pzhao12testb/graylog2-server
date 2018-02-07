@@ -1,9 +1,8 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import Reflux from 'reflux';
 import { Row, Col } from 'react-bootstrap';
 
-import { DocumentTitle, PageHeader, Spinner } from 'components/common';
+import { PageHeader, Spinner } from 'components/common';
 
 import StoreProvider from 'injection/StoreProvider';
 const NodesStore = StoreProvider.getStore('Nodes');
@@ -22,14 +21,14 @@ const ThreadDumpPage = React.createClass({
   },
   mixins: [Reflux.connect(CurrentUserStore), Reflux.connectFilter(NodesStore, 'node', nodeFilter)],
   componentDidMount() {
-    ClusterOverviewStore.threadDump(this.props.params.nodeId).then(threadDump => this.setState({ threadDump: threadDump }));
+    ClusterOverviewStore.threadDump(this.props.params.nodeId).then(threadDump => this.setState({threadDump: threadDump}));
   },
   _isLoading() {
     return !this.state.node;
   },
   render() {
     if (this._isLoading()) {
-      return <Spinner />;
+      return <Spinner/>;
     }
 
     const title = (
@@ -40,21 +39,17 @@ const ThreadDumpPage = React.createClass({
       </span>
     );
 
-    const threadDump = this.state.threadDump ? <pre className="threaddump">{this.state.threadDump}</pre> : <Spinner />;
+    const threadDump = this.state.threadDump ? <pre className="threaddump">{this.state.threadDump}</pre> : <Spinner/>;
 
     return (
-      <DocumentTitle title={`Thread dump of node ${this.state.node.short_node_id} / ${this.state.node.hostname}`}>
-        <div>
-          <PageHeader title={title}>
-            <span />
-          </PageHeader>
-          <Row className="content input-list">
-            <Col md={12}>
-              {threadDump}
-            </Col>
-          </Row>
-        </div>
-      </DocumentTitle>
+      <div>
+        <PageHeader title={title}/>
+        <Row className="content input-list">
+          <Col md={12}>
+            {threadDump}
+          </Col>
+        </Row>
+      </div>
     );
   },
 });

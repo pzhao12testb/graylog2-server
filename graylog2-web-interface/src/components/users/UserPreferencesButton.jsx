@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Button } from 'react-bootstrap';
 
@@ -6,7 +5,7 @@ import UserPreferencesModal from 'components/users/UserPreferencesModal';
 
 const UserPreferencesButton = React.createClass({
   propTypes: {
-    userName: PropTypes.string.isRequired,
+    userName: React.PropTypes.string.isRequired,
   },
   onClick() {
     this.refs.userPreferencesModal.openModal();

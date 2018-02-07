@@ -17,17 +17,15 @@
 
 package org.graylog2.indexer.rotation.strategies;
 
-import org.graylog2.audit.AuditEventSender;
+import org.graylog2.auditlog.AuditLogger;
+import org.graylog2.indexer.Deflector;
 import org.graylog2.indexer.IndexNotFoundException;
-import org.graylog2.indexer.IndexSet;
-import org.graylog2.indexer.indexset.IndexSetConfig;
 import org.graylog2.indexer.indices.Indices;
-import org.graylog2.plugin.system.NodeId;
-import org.junit.Rule;
+import org.graylog2.plugin.cluster.ClusterConfigService;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -36,65 +34,57 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class MessageCountRotationStrategyTest {
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
+    @Mock
+    private ClusterConfigService clusterConfigService;
 
     @Mock
-    private IndexSet indexSet;
-
-    @Mock
-    private IndexSetConfig indexSetConfig;
+    private Deflector deflector;
 
     @Mock
     private Indices indices;
 
     @Mock
-    private NodeId nodeId;
-
-    @Mock
-    private AuditEventSender auditEventSender;
+    private AuditLogger auditLogger;
 
     @Test
     public void testRotate() throws Exception {
         when(indices.numberOfMessages("name")).thenReturn(10L);
-        when(indexSet.getNewestIndex()).thenReturn("name");
-        when(indexSet.getConfig()).thenReturn(indexSetConfig);
-        when(indexSetConfig.rotationStrategy()).thenReturn(MessageCountRotationStrategyConfig.create(5));
+        when(deflector.getNewestTargetName()).thenReturn("name");
+        when(clusterConfigService.get(MessageCountRotationStrategyConfig.class)).thenReturn(MessageCountRotationStrategyConfig.create(5));
 
-        final MessageCountRotationStrategy strategy = new MessageCountRotationStrategy(indices, nodeId, auditEventSender);
+        final MessageCountRotationStrategy strategy = new MessageCountRotationStrategy(indices, deflector, clusterConfigService, auditLogger);
 
-        strategy.rotate(indexSet);
-        verify(indexSet, times(1)).cycle();
-        reset(indexSet);
+        strategy.rotate();
+        verify(deflector, times(1)).cycle();
+        reset(deflector);
     }
 
     @Test
     public void testDontRotate() throws Exception {
         when(indices.numberOfMessages("name")).thenReturn(1L);
-        when(indexSet.getNewestIndex()).thenReturn("name");
-        when(indexSet.getConfig()).thenReturn(indexSetConfig);
-        when(indexSetConfig.rotationStrategy()).thenReturn(MessageCountRotationStrategyConfig.create(5));
+        when(deflector.getNewestTargetName()).thenReturn("name");
+        when(clusterConfigService.get(MessageCountRotationStrategyConfig.class)).thenReturn(MessageCountRotationStrategyConfig.create(5));
 
-        final MessageCountRotationStrategy strategy = new MessageCountRotationStrategy(indices, nodeId, auditEventSender);
+        final MessageCountRotationStrategy strategy = new MessageCountRotationStrategy(indices, deflector, clusterConfigService, auditLogger);
 
-        strategy.rotate(indexSet);
-        verify(indexSet, never()).cycle();
-        reset(indexSet);
+        strategy.rotate();
+        verify(deflector, never()).cycle();
+        reset(deflector);
     }
 
 
     @Test
     public void testIndexUnavailable() throws Exception {
         doThrow(IndexNotFoundException.class).when(indices).numberOfMessages("name");
-        when(indexSet.getNewestIndex()).thenReturn("name");
-        when(indexSet.getConfig()).thenReturn(indexSetConfig);
-        when(indexSetConfig.rotationStrategy()).thenReturn(MessageCountRotationStrategyConfig.create(5));
+        when(deflector.getNewestTargetName()).thenReturn("name");
+        when(clusterConfigService.get(MessageCountRotationStrategyConfig.class)).thenReturn(MessageCountRotationStrategyConfig.create(5));
 
-        final MessageCountRotationStrategy strategy = new MessageCountRotationStrategy(indices, nodeId, auditEventSender);
+        final MessageCountRotationStrategy strategy = new MessageCountRotationStrategy(indices, deflector, clusterConfigService ,auditLogger);
 
-        strategy.rotate(indexSet);
-        verify(indexSet, never()).cycle();
-        reset(indexSet);
+        strategy.rotate();
+        verify(deflector, never()).cycle();
+        reset(deflector);
     }
 }

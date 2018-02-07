@@ -1,28 +1,25 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
+import ReactDOM from 'react-dom';
 import $ from 'jquery';
-import Reflux from 'reflux';
+import Qs from 'qs';
+import { PluginStore } from 'graylog-web-plugin/plugin';
+
+import URLUtils from 'util/URLUtils';
 
 import { WidgetConfigModal, WidgetEditConfigModal, WidgetFooter, WidgetHeader, WidgetVisualizationNotFound } from 'components/widgets';
-import { PluginStore } from 'graylog-web-plugin/plugin';
-import StoreProvider from 'injection/StoreProvider';
-import Routes from 'routing/Routes';
-import EventHandlersThrottler from 'util/EventHandlersThrottler';
-import PermissionsMixin from 'util/PermissionsMixin';
-import CombinedProvider from '../../injection/CombinedProvider';
 
-const { WidgetsStore, WidgetsActions } = CombinedProvider.get('Widgets');
-const CurrentUserStore = StoreProvider.getStore('CurrentUser');
+import StoreProvider from 'injection/StoreProvider';
+const WidgetsStore = StoreProvider.getStore('Widgets');
+
+import ActionsProvider from 'injection/ActionsProvider';
+const WidgetsActions = ActionsProvider.getActions('Widgets');
 
 const Widget = React.createClass({
-  mixins: [Reflux.connect(CurrentUserStore), PermissionsMixin],
-
   propTypes: {
     widget: PropTypes.object.isRequired,
     dashboardId: PropTypes.string.isRequired,
     shouldUpdate: PropTypes.bool.isRequired,
     locked: PropTypes.bool.isRequired,
-    streamIds: PropTypes.object,
   },
   getInitialState() {
     this.widgetPlugin = this._getWidgetPlugin(this.props.widget.type);
@@ -38,14 +35,7 @@ const Widget = React.createClass({
   componentDidMount() {
     this._loadValue();
     this.loadValueInterval = setInterval(this._loadValue, Math.min(this.props.widget.cache_time * 1000, this.DEFAULT_WIDGET_VALUE_REFRESH));
-
-    // We need an instance per element of the widget component, so all elements get resized
-    this.eventsThrottler = new EventHandlersThrottler();
-
-    // We need to handle the event using jQuery, as the native `addEventListener` does not allow the same function
-    // to be used as event handler more than once. This means that when n widgets are mounted, the same function
-    // is going to be called n times on the same widget, resulting in a single widget being updated n times.
-    $(window).on('resize', this._onResize);
+    $(document).on('gridster:resizestop', () => this._calculateWidgetSize());
   },
   componentWillReceiveProps(nextProps) {
     this.widgetPlugin = this._getWidgetPlugin(nextProps.widget.type);
@@ -55,7 +45,7 @@ const Widget = React.createClass({
   },
   componentWillUnmount() {
     clearInterval(this.loadValueInterval);
-    $(window).off('resize', this._onResize);
+    $(document).off('gridster:resizestop', () => this._calculateWidgetSize());
   },
 
   DEFAULT_WIDGET_VALUE_REFRESH: 10 * 1000,
@@ -70,14 +60,14 @@ const Widget = React.createClass({
     return ('stream_id' in this.props.widget.config) && (this.props.widget.config.stream_id !== null);
   },
   _getWidgetNode() {
-    return this.node;
+    return ReactDOM.findDOMNode(this.refs.widget);
   },
   _loadValue() {
     if (this.state.deleted || (this.state.result !== undefined && !this.props.shouldUpdate)) {
       return;
     }
 
-    const width = this.node.clientWidth;
+    const width = this.refs.widget.clientWidth;
 
     WidgetsStore.loadValue(this.props.dashboardId, this.props.widget.id, width).then((value) => {
       // Avoid updating state if the result didn't change
@@ -107,12 +97,8 @@ const Widget = React.createClass({
       });
     });
   },
-  _onResize() {
-    this.eventsThrottler.throttle(this._calculateWidgetSize, undefined, this.props.widget.id);
-  },
   _calculateWidgetSize() {
     const $widgetNode = $(this._getWidgetNode());
-    if (!$widgetNode) { return; }
     // .height() give us the height of the whole widget without counting paddings, we need to remove the size
     // of the header and footer from that.
     const availableHeight = $widgetNode.height() - (this.WIDGET_HEADER_HEIGHT + this.WIDGET_FOOTER_HEIGHT);
@@ -129,7 +115,7 @@ const Widget = React.createClass({
     if (this.state.result === undefined) {
       return (
         <div className="loading">
-          <i className="fa fa-spin fa-3x fa-refresh spinner" />
+          <i className="fa fa-spin fa-3x fa-refresh spinner"/>
         </div>
       );
     }
@@ -139,7 +125,7 @@ const Widget = React.createClass({
     }
 
     if (!this.widgetPlugin) {
-      return <WidgetVisualizationNotFound widgetClassName={this.props.widget.type} />;
+      return <WidgetVisualizationNotFound widgetClassName={this.props.widget.type}/>;
     }
 
     return React.createElement(this.widgetPlugin.visualizationComponent, {
@@ -149,101 +135,101 @@ const Widget = React.createClass({
       height: this.state.height,
       width: this.state.width,
       computationTimeRange: this.state.computationTimeRange,
-      locked: !this.props.locked, // widget should be locked when dashboard is unlocked and widgets can be moved
     });
   },
-  _getTimeRange() {
+  _getUrlPath() {
+    if (this._isBoundToStream()) {
+      return `/streams/${this.props.widget.config.stream_id}/search`;
+    }
+
+    return '/search';
+  },
+  _getUrlQueryString() {
     const config = this.props.widget.config;
     const rangeType = config.timerange.type;
 
-    const timeRange = {
+    const query = {
+      q: config.query,
       rangetype: rangeType,
+      interval: config.interval,
     };
     switch (rangeType) {
       case 'relative':
-        timeRange[rangeType] = config.timerange.range;
+        query[rangeType] = config.timerange.range;
         break;
       case 'absolute':
-        timeRange.from = config.timerange.from;
-        timeRange.to = config.timerange.to;
+        query.from = config.timerange.from;
+        query.to = config.timerange.to;
         break;
       case 'keyword':
-        timeRange[rangeType] = config.timerange.keyword;
+        query[rangeType] = config.timerange.keyword;
         break;
       default:
-      // do nothing
+        // do nothing
     }
 
-    return timeRange;
+    return Qs.stringify(query);
   },
   replayUrl() {
-    const config = this.props.widget.config;
-    if (this._isBoundToStream()) {
-      return Routes.stream_search(this.props.widget.config.stream_id, config.query, this._getTimeRange(), config.interval);
-    }
+    // TODO: replace with react router link
+    const path = this._getUrlPath();
+    const queryString = this._getUrlQueryString();
 
-    return Routes.search(config.query, this._getTimeRange(), config.interval);
+    return URLUtils.appPrefixed(path + '?' + queryString);
+  },
+  _replaySearch(e) {
+    URLUtils.openLink(this.replayUrl(), e.metaKey || e.ctrlKey);
   },
   _showConfig() {
-    this.configModal.open();
+    this.refs.configModal.open();
   },
   _showEditConfig() {
-    this.editModal.open();
+    this.refs.editModal.open();
   },
   updateWidget(newWidgetData) {
-    const realNewWidgetData = newWidgetData;
-    realNewWidgetData.id = this.props.widget.id;
+    newWidgetData.id = this.props.widget.id;
 
-    WidgetsStore.updateWidget(this.props.dashboardId, realNewWidgetData);
+    WidgetsStore.updateWidget(this.props.dashboardId, newWidgetData);
   },
   deleteWidget() {
     if (window.confirm(`Do you really want to delete "${this.props.widget.description}"?`)) {
-      this.setState({ deleted: true });
+      this.setState({deleted: true});
       WidgetsActions.removeWidget(this.props.dashboardId, this.props.widget.id);
     }
   },
   render() {
     if (this.state.deleted) {
-      return <span />;
+      return <span/>;
     }
     const showConfigModal = (
-      <WidgetConfigModal ref={(node) => { this.configModal = node; }}
+      <WidgetConfigModal ref="configModal"
                          dashboardId={this.props.dashboardId}
                          widget={this.props.widget}
-                         boundToStream={this._isBoundToStream()} />
+                         boundToStream={this._isBoundToStream()}/>
     );
 
     const editConfigModal = (
-      <WidgetEditConfigModal ref={(node) => { this.editModal = node; }}
+      <WidgetEditConfigModal ref="editModal"
                              widget={this.props.widget}
-                             onUpdate={this.updateWidget} />
+                             onUpdate={this.updateWidget}/>
     );
 
-    /* Note that we consider two cases here: a dashboard configured from
-       a stream and a dashboard configured from global search. */
-    const canReadConfiguredStream = this.props.widget.config.stream_id && this.props.streamIds != null &&
-      this.props.streamIds[this.props.widget.config.stream_id];
-    const canSearchGlobally = !this.props.widget.config.stream_id &&
-      this.isPermitted(this.state.currentUser.permissions,
-        ['searches:absolute', 'searches:keyword', 'searches:relative']);
-
-    const disabledReplay = !canReadConfiguredStream && !canSearchGlobally;
-
     return (
-      <div ref={(node) => { this.node = node; }} className="widget" data-widget-id={this.props.widget.id}>
-        <WidgetHeader title={this.props.widget.description} />
+      <div ref="widget" className="widget" data-widget-id={this.props.widget.id}>
+        <WidgetHeader ref="widgetHeader"
+                      title={this.props.widget.description}
+                      calculatedAt={this.state.calculatedAt}
+                      error={this.state.error}
+                      errorMessage={this.state.errorMessage}/>
 
         {this._getVisualization()}
 
-        <WidgetFooter locked={this.props.locked}
+        <WidgetFooter ref="widgetFooter"
+                      locked={this.props.locked}
+                      onReplaySearch={this._replaySearch}
                       onShowConfig={this._showConfig}
                       onEditConfig={this._showEditConfig}
-                      onDelete={this.deleteWidget}
-                      replayHref={this.replayUrl()}
-                      replayDisabled={disabledReplay}
-                      calculatedAt={this.state.calculatedAt}
-                      error={this.state.error}
-                      errorMessage={this.state.errorMessage} />
+                      onDelete={this.deleteWidget}/>
         {this.props.locked ? showConfigModal : editConfigModal}
       </div>
     );

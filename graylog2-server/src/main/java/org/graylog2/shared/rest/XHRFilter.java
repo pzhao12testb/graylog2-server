@@ -27,7 +27,7 @@ public class XHRFilter implements ContainerResponseFilter {
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
         // Add no-cache to XMLHttpRequests, to avoid browsers caching results
         String requestedWith = requestContext.getHeaders().getFirst("X-Requested-With");
-        if ("XMLHttpRequest".equals(requestedWith)) {
+        if (requestedWith != null && requestedWith.equals("XMLHttpRequest")) {
             responseContext.getHeaders().add("Cache-Control", "no-cache");
         }
     }

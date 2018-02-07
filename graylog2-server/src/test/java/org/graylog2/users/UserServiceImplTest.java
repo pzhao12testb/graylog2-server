@@ -19,7 +19,6 @@ package org.graylog2.users;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.eventbus.EventBus;
 import com.lordofthejars.nosqlunit.annotation.UsingDataSet;
 import com.lordofthejars.nosqlunit.core.LoadStrategyEnum;
 import com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb;
@@ -43,9 +42,9 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,14 +55,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class UserServiceImplTest {
     @ClassRule
     public static final InMemoryMongoDb MONGO = newInMemoryMongoDbRule().build();
     @Rule
     public MongoConnectionRule mongoRule = MongoConnectionRule.build("test");
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
-    
+
     private MongoConnection mongoConnection;
     private Configuration configuration;
     private UserImpl.Factory userFactory;
@@ -73,8 +71,6 @@ public class UserServiceImplTest {
     private RoleService roleService;
     @Mock
     private InMemoryRolePermissionResolver permissionsResolver;
-    @Mock
-    private EventBus serverEventBus;
 
     @Before
     public void setUp() throws Exception {
@@ -83,7 +79,7 @@ public class UserServiceImplTest {
         this.userFactory = new UserImplFactory(configuration);
         this.permissions = new Permissions(ImmutableSet.of(new RestPermissions()));
         this.userService = new UserServiceImpl(mongoConnection, configuration, roleService, userFactory,
-                                               permissionsResolver, serverEventBus);
+                                               permissionsResolver);
 
         when(roleService.getAdminRoleObjectId()).thenReturn("deadbeef");
     }
@@ -210,7 +206,7 @@ public class UserServiceImplTest {
     public void testGetPermissionsForUser() throws Exception {
         final InMemoryRolePermissionResolver permissionResolver = mock(InMemoryRolePermissionResolver.class);
         final UserService userService = new UserServiceImpl(mongoConnection, configuration, roleService, userFactory,
-                                                            permissionResolver, serverEventBus);
+                                                            permissionResolver);
 
         final UserImplFactory factory = new UserImplFactory(new Configuration());
         final UserImpl user = factory.create(new HashMap<>());

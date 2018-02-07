@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import { Row, Col, Alert } from 'react-bootstrap';
 
 import { IfPermitted, TypeAheadDataFilter } from 'components/common';
@@ -17,7 +16,6 @@ const StreamComponent = React.createClass({
   propTypes: {
     currentUser: PropTypes.object.isRequired,
     onStreamSave: PropTypes.func.isRequired,
-    indexSets: PropTypes.array.isRequired,
   },
   getInitialState() {
     return {};
@@ -26,40 +24,23 @@ const StreamComponent = React.createClass({
   componentDidMount() {
     this.loadData();
     StreamRulesStore.types().then((types) => {
-      this.setState({ streamRuleTypes: types });
+      this.setState({streamRuleTypes: types});
     });
     StreamsStore.onChange(this.loadData);
     StreamRulesStore.onChange(this.loadData);
-  },
-
-  componentDidUpdate() {
-    if (this.state.filteredStreams === null) {
-      this._filterStreams();
-    }
-  },
-
-  componentWillUnmount() {
-    StreamsStore.unregister(this.loadData);
-    StreamRulesStore.unregister(this.loadData);
   },
 
   loadData() {
     StreamsStore.load((streams) => {
       this.setState({
         streams: streams,
-        filteredStreams: null,
+        filteredStreams: streams.slice(),
       });
     });
   },
 
-  _filterStreams() {
-    if (this.refs.streamFilter) {
-      this.refs.streamFilter.filterData();
-    }
-  },
-
   _updateFilteredStreams(filteredStreams) {
-    this.setState({ filteredStreams: filteredStreams });
+    this.setState({filteredStreams: filteredStreams});
   },
 
   _isLoading() {
@@ -69,8 +50,8 @@ const StreamComponent = React.createClass({
   render() {
     if (this._isLoading()) {
       return (
-        <div style={{ marginLeft: 10 }}>
-          <Spinner />
+        <div style={{marginLeft: 10}}>
+          <Spinner/>
         </div>
       );
     }
@@ -80,39 +61,34 @@ const StreamComponent = React.createClass({
         <IfPermitted permissions="streams:create">
           <CreateStreamButton bsSize="small" bsStyle="link" className="btn-text"
                               buttonText="Create one now" ref="createStreamButton"
-                              indexSets={this.props.indexSets}
-                              onSave={this.props.onStreamSave} />
+                              onSave={this.props.onStreamSave}/>
         </IfPermitted>
       );
 
       return (
         <Alert bsStyle="warning">
-          <i className="fa fa-info-circle" />&nbsp;No streams configured. {createStreamButton}
+          <i className="fa fa-info-circle"/>&nbsp;No streams configured. {createStreamButton}
         </Alert>
       );
     }
-
-    const streamsList = this.state.filteredStreams ? (<StreamList streams={this.state.filteredStreams} streamRuleTypes={this.state.streamRuleTypes}
-                                                                  permissions={this.props.currentUser.permissions} user={this.props.currentUser}
-                                                                  onStreamSave={this.props.onStreamSave} indexSets={this.props.indexSets} />) : <Spinner />;
 
     return (
       <div>
         <Row className="row-sm">
           <Col md={8}>
-            <TypeAheadDataFilter id="stream-data-filter"
-                                 ref="streamFilter"
-                                 label="Filter streams"
+            <TypeAheadDataFilter label="Filter streams"
                                  data={this.state.streams}
                                  displayKey={'title'}
                                  filterSuggestions={[]}
                                  searchInKeys={['title', 'description']}
-                                 onDataFiltered={this._updateFilteredStreams} />
+                                 onDataFiltered={this._updateFilteredStreams}/>
           </Col>
         </Row>
         <Row>
           <Col md={12}>
-            {streamsList}
+            <StreamList streams={this.state.filteredStreams} streamRuleTypes={this.state.streamRuleTypes}
+                        permissions={this.props.currentUser.permissions} user={this.props.currentUser}
+                        onStreamSave={this.props.onStreamSave}/>
           </Col>
         </Row>
       </div>
@@ -120,4 +96,4 @@ const StreamComponent = React.createClass({
   },
 });
 
-export default StreamComponent;
+module.exports = StreamComponent;

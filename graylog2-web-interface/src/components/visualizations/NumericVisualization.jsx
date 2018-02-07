@@ -1,40 +1,21 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import deepEqual from 'deep-equal';
 
 import NumberUtils from 'util/NumberUtils';
-
-import style from './NumericVisualization.css';
 
 const TrendIndicatorType = {
   HIGHER: 'higher',
   LOWER: 'lower',
 };
 
-const TREND_ICON_COLOR = '#E3E5E5';
-const TREND_ICON_GOOD_COLOR = '#8DC63F';
-const TREND_ICON_BAD_COLOR = '#BE1E2D';
-
 const NumericVisualization = React.createClass({
   propTypes: {
-    id: PropTypes.string.isRequired,
-    config: PropTypes.object.isRequired,
-    data: PropTypes.oneOfType([
-      PropTypes.object,
-      PropTypes.number,
+    config: React.PropTypes.object.isRequired,
+    data: React.PropTypes.oneOfType([
+      React.PropTypes.object,
+      React.PropTypes.number,
     ]).isRequired,
-    height: PropTypes.number,
-    width: PropTypes.number,
-    onRenderComplete: PropTypes.func,
   },
-
-  getDefaultProps() {
-    return {
-      onRenderComplete: () => {
-      },
-    };
-  },
-
   getInitialState() {
     return {
       currentNumber: undefined,
@@ -42,24 +23,20 @@ const NumericVisualization = React.createClass({
     };
   },
   componentDidMount() {
-    this._updateData(this.props.data, this.props.onRenderComplete);
+    const state = this._normalizeStateFromProps(this.props.data);
+    this.setState(state);
   },
   componentWillReceiveProps(nextProps) {
     if (deepEqual(this.props, nextProps)) {
       return;
     }
-    this._updateData(nextProps.data, this.props.onRenderComplete);
-  },
 
-  DEFAULT_VALUE_FONT_SIZE: '60px',
+    const state = this._normalizeStateFromProps(nextProps.data);
+    this.setState(state);
+  },
+  DEFAULT_VALUE_FONT_SIZE: '70px',
   NUMBER_OF_INDICATORS: 3,
   PERCENTAGE_PER_INDICATOR: 30,
-
-  _updateData(data, renderCallback) {
-    const state = this._normalizeStateFromProps(data);
-    this.setState(state, renderCallback);
-  },
-
   _normalizeStateFromProps(props) {
     let state = {};
     if (typeof props === 'object') {
@@ -71,7 +48,7 @@ const NumericVisualization = React.createClass({
         percentage: this._calculatePercentage(normalizedNowNumber, normalizedPreviousNumber),
       };
     } else {
-      state = { currentNumber: props };
+      state = {currentNumber: props};
     }
     return state;
   },
@@ -98,17 +75,17 @@ const NumericVisualization = React.createClass({
     }
 
     let fontSize;
-    const formattedLength = this._formatData().length;
+    const numberOfDigits = this._formatData().replace(/[,.]/g, '').length;
 
-    if (formattedLength < 7) {
+    if (numberOfDigits < 7) {
       fontSize = this.DEFAULT_VALUE_FONT_SIZE;
     } else {
-      switch (formattedLength) {
+      switch (numberOfDigits) {
         case 7:
-          fontSize = '50px';
+          fontSize = '60px';
           break;
         case 8:
-          fontSize = '45px';
+          fontSize = '50px';
           break;
         case 9:
         case 10:
@@ -142,64 +119,67 @@ const NumericVisualization = React.createClass({
     }
     return Math.abs(this.state.percentage) >= this.PERCENTAGE_PER_INDICATOR * index;
   },
-  _getStrokeColor(index, trendIndicatorType) {
+  _getIndicatorClass(index, trendIndicatorType) {
+    const className = 'trend-icon';
+
     const indicatorIsActive = this._isIndicatorActive(index, trendIndicatorType);
     if (!indicatorIsActive) {
-      return TREND_ICON_COLOR;
+      return className;
     }
 
-    const lowerStroke = this.props.config.lower_is_better ? TREND_ICON_GOOD_COLOR : TREND_ICON_BAD_COLOR;
-    const higherStroke = this.props.config.lower_is_better ? TREND_ICON_BAD_COLOR : TREND_ICON_GOOD_COLOR;
+    const lowerClass = Boolean(this.props.config.lower_is_better) ? 'trend-good' : 'trend-bad';
+    const higherClass = Boolean(this.props.config.lower_is_better) ? 'trend-bad' : 'trend-good';
 
-    const activeStroke = trendIndicatorType === TrendIndicatorType.HIGHER ? higherStroke : lowerStroke;
+    const activeClass = trendIndicatorType === TrendIndicatorType.HIGHER ? higherClass : lowerClass;
 
-    return activeStroke;
+    return className + ' ' + activeClass;
   },
-  _getHigherStrokeColor(index) {
-    return this._getStrokeColor(index, TrendIndicatorType.HIGHER);
+  _getHigherIndicatorClass(index) {
+    return this._getIndicatorClass(index, TrendIndicatorType.HIGHER);
   },
-  _getLowerStrokeColor(index) {
-    return this._getStrokeColor(index, TrendIndicatorType.LOWER);
-  },
-  // We need to set some attributes in the DOM elements that React v0.14 does not support.
-  // This is a hack to workaround it as suggested in https://github.com/facebook/react/pull/5210
-  _setAttribute(attribute, value) {
-    return (node) => {
-      if (node) {
-        node.setAttribute(attribute, value);
-      }
-    };
+  _getLowerIndicatorClass(index) {
+    return this._getIndicatorClass(index, TrendIndicatorType.LOWER);
   },
   render() {
-    const { id, config, width, height } = this.props;
-
     let trendIndicators;
 
-    if (config.trend) {
+    if (Boolean(this.props.config.trend)) {
       trendIndicators = (
-        <g transform="translate(270,45)">
-          <g transform="translate(0,-17)">
-            <path d="M0 5 L5 0 L10 5" fill="none" stroke={this._getHigherStrokeColor(0)} />
-            <path d="M0 10 L5 5 L10 10" fill="none" stroke={this._getHigherStrokeColor(1)} />
-            <path d="M0 15 L5 10 L10 15" fill="none" stroke={this._getHigherStrokeColor(2)} />
-          </g>
-          <g transform="translate(0, 2) rotate(180,5,7.5)">
-            <path d="M0 5 L5 0 L10 5" fill="none" stroke={this._getLowerStrokeColor(2)} />
-            <path d="M0 10 L5 5 L10 10" fill="none" stroke={this._getLowerStrokeColor(1)} />
-            <path d="M0 15 L5 10 L10 15" fill="none" stroke={this._getLowerStrokeColor(0)} />
-          </g>
-        </g>
+        <div className="trend-indicators">
+          <div className="trend-icons-higher">
+            <div className={this._getHigherIndicatorClass(0)}>
+              <span className="trend-higher"><i className="fa fa-angle-up"/></span>
+            </div>
+            <div className={this._getHigherIndicatorClass(1)}>
+              <span className="trend-higher"><i className="fa fa-angle-up"/></span>
+            </div>
+            <div className={this._getHigherIndicatorClass(2)}>
+              <span className="trend-higher"><i className="fa fa-angle-up"/></span>
+            </div>
+          </div>
+          <div className="trend-icons-lower">
+            <div className={this._getLowerIndicatorClass(0)}>
+              <span className="trend-lower"><i className="fa fa-angle-down"/></span>
+            </div>
+            <div className={this._getLowerIndicatorClass(1)}>
+              <span className="trend-lower"><i className="fa fa-angle-down"/></span>
+            </div>
+            <div className={this._getLowerIndicatorClass(2)}>
+              <span className="trend-lower"><i className="fa fa-angle-down"/></span>
+            </div>
+          </div>
+        </div>
       );
     }
 
     return (
-      <div id={`visualization-${id}`} className={style.container}>
-        <svg viewBox="0 0 300 100" className={style.number} width="100%" height="100%" style={{ height: height, width: width }}>
-          <text x="150" y="45" className={style.value} style={{ fontSize: this._calculateFontSize() }}>
+      <div className="number">
+        <div className="text-center">
+          <span className="value" style={{fontSize: this._calculateFontSize()}}>
             {this._formatData()}
-          </text>
+          </span>
           {trendIndicators}
-        </svg>
+        </div>
       </div>
     );
   },

@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Button } from 'react-bootstrap';
 import { markdown } from 'markdown';
@@ -10,9 +9,9 @@ const ConfigurationBundlesActions = ActionsProvider.getActions('ConfigurationBun
 
 const ConfigurationBundlePreview = React.createClass({
   propTypes: {
-    sourceTypeId: PropTypes.string,
-    sourceTypeDescription: PropTypes.string,
-    onDelete: PropTypes.func.isRequired,
+    sourceTypeId: React.PropTypes.string,
+    sourceTypeDescription: React.PropTypes.string,
+    onDelete: React.PropTypes.func.isRequired,
   },
 
   _confirmDeletion() {
@@ -51,7 +50,7 @@ const ConfigurationBundlePreview = React.createClass({
           {deleteAction}
           <h2>Content pack description:</h2>
         </div>
-        <div dangerouslySetInnerHTML={{ __html: markdownPreview }} />
+        <div dangerouslySetInnerHTML={{__html: markdownPreview}}/>
         <div className="preview-actions">
           {applyAction}
         </div>

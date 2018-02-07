@@ -1,17 +1,16 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import Immutable from 'immutable';
 
 import { Tabs, Tab, Button, ButtonGroup } from 'react-bootstrap';
 
-import { TableList } from 'components/common';
+import TableList from '../common/TableList';
 
 const PermissionSelector = React.createClass({
   propTypes: {
-    onChange: PropTypes.func,
-    streams: PropTypes.object,
-    dashboards: PropTypes.object,
-    permissions: PropTypes.object,
+    onChange: React.PropTypes.func,
+    streams: React.PropTypes.object,
+    dashboards: React.PropTypes.object,
+    permissions: React.PropTypes.object,
   },
 
   render() {
@@ -19,27 +18,19 @@ const PermissionSelector = React.createClass({
       const isRead = this.props.permissions.contains(`streams:read:${stream.id}`);
       const isEdit = this.props.permissions.contains(`streams:edit:${stream.id}`);
       return (<ButtonGroup bsSize="small">
-        <Button bsStyle={isRead ? 'info' : 'default'}
-                onClick={() => this._toggleStreamReadPermissions(stream)}
+        <Button bsStyle={isRead ? 'info' : 'default'} onClick={() => this._toggleStreamReadPermissions(stream)}
                 active={isRead}>Allow reading</Button>
-        <Button bsStyle={isEdit ? 'info' : 'default'}
-                onClick={() => this._toggleStreamEditPermissions(stream)}
+        <Button bsStyle={isEdit ? 'info' : 'default'} onClick={() => this._toggleStreamEditPermissions(stream)}
                 active={isEdit}>Allow editing</Button>
       </ButtonGroup>);
     };
 
     const multiStreamButtons = (streamIds) => {
-      const selectedStreams = this.props.streams.filter(stream => streamIds.contains(stream.id));
-      const allRead = selectedStreams.every(stream => this.props.permissions.contains(`streams:read:${stream.id}`));
-      const allEdit = selectedStreams.every(stream => this.props.permissions.contains(`streams:edit:${stream.id}`));
-      const readActionLabel = allRead ? 'Clear' : 'Set';
-      const editActionLabel = allEdit ? 'Clear' : 'Set';
-
       return (
-        <div className="pull-right" style={{ marginTop: 10, marginBottom: 10 }}>
-          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllStreamsRead(streamIds, allRead)}>{readActionLabel} read permissions</Button>
+        <div className="pull-right" style={{marginTop: 10, marginBottom: 10}}>
+          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllStreamsRead(streamIds)}>Toggle read permissions</Button>
           &nbsp;
-          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllStreamsEdit(streamIds, allEdit)}>{editActionLabel} edit permissions</Button>
+          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllStreamsEdit(streamIds)}>Toggle edit permissions</Button>
         </div>
       );
     };
@@ -48,35 +39,28 @@ const PermissionSelector = React.createClass({
       const isRead = this.props.permissions.contains(`dashboards:read:${dashboard.id}`);
       const isEdit = this.props.permissions.contains(`dashboards:edit:${dashboard.id}`);
       return (<ButtonGroup bsSize="small">
-        <Button bsStyle={isRead ? 'info' : 'default'}
-                onClick={() => this._toggleDashboardReadPermissions(dashboard)}
+        <Button bsStyle={isRead ? 'info' : 'default'} onClick={() => this._toggleDashboardReadPermissions(dashboard)}
                 active={isRead}>Allow reading</Button>
-        <Button bsStyle={isEdit ? 'info' : 'default'}
-                onClick={() => this._toggleDashboardEditPermissions(dashboard)}
+        <Button bsStyle={isEdit ? 'info' : 'default'} onClick={() => this._toggleDashboardEditPermissions(dashboard)}
                 active={isEdit}>Allow editing</Button>
       </ButtonGroup>);
     };
-    const multiDashboardButtons = (dashboardIds) => {
-      const selectedDashboards = this.props.dashboards.filter(dashboard => dashboardIds.contains(dashboard.id));
-      const allRead = selectedDashboards.every(dashboard => this.props.permissions.contains(`dashboards:read:${dashboard.id}`));
-      const allEdit = selectedDashboards.every(dashboard => this.props.permissions.contains(`dashboards:edit:${dashboard.id}`));
-      const readActionLabel = allRead ? 'Clear' : 'Set';
-      const editActionLabel = allEdit ? 'Clear' : 'Set';
 
+    const multiDashboardButtons = (dashboardIds) => {
       return (
-        <div className="pull-right" style={{ marginTop: 10, marginBottom: 10 }}>
-          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllDashboardsRead(dashboardIds, allRead)}>{readActionLabel} read permissions</Button>
+        <div className="pull-right" style={{marginTop: 10, marginBottom: 10}}>
+          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllDashboardsRead(dashboardIds)}>Toggle read permissions</Button>
           &nbsp;
-          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllDashboardsEdit(dashboardIds, allEdit)}>{editActionLabel} edit permissions</Button>
+          <Button bsSize="xsmall" bsStyle="info" onClick={() => this._toggleAllDashboardsEdit(dashboardIds)}>Toggle edit permissions</Button>
         </div>
       );
     };
 
     return (
       <div>
-        <Tabs id="permissionSelectorTabs" defaultActiveKey={1} animation={false}>
+        <Tabs defaultActiveKey={1} animation={false}>
           <Tab eventKey={1} title="Streams">
-            <div style={{ marginTop: 10 }}>
+            <div style={{marginTop: 10}}>
               <TableList
                 items={this.props.streams}
                 filterLabel="Filter Streams"
@@ -87,7 +71,7 @@ const PermissionSelector = React.createClass({
             </div>
           </Tab>
           <Tab eventKey={2} title="Dashboards">
-            <div style={{ marginTop: 10 }}>
+            <div style={{marginTop: 10}}>
               <TableList
                 items={this.props.dashboards}
                 filterLabel="Filter Dashboards"
@@ -125,31 +109,31 @@ const PermissionSelector = React.createClass({
    * onClick actions for bulk edits
    */
 
-  _toggleAllStreamsRead(streamIds, clearPermissions) {
-    this._toggleReadPermissions('streams', streamIds, clearPermissions);
+  _toggleAllStreamsRead(streamIds) {
+    this._toggleReadPermissions('streams', streamIds);
   },
 
-  _toggleAllStreamsEdit(streamIds, clearPermissions) {
-    this._toggleEditPermissions('streams', streamIds, clearPermissions);
+  _toggleAllStreamsEdit(streamIds) {
+    this._toggleEditPermissions('streams', streamIds);
   },
 
-  _toggleAllDashboardsRead(dashboardIds, clearPermissions) {
-    this._toggleReadPermissions('dashboards', dashboardIds, clearPermissions);
+  _toggleAllDashboardsRead(dashboardIds) {
+    this._toggleReadPermissions('dashboards', dashboardIds);
   },
 
-  _toggleAllDashboardsEdit(dashboardIds, clearPermissions) {
-    this._toggleEditPermissions('dashboards', dashboardIds, clearPermissions);
+  _toggleAllDashboardsEdit(dashboardIds) {
+    this._toggleEditPermissions('dashboards', dashboardIds);
   },
 
-  _toggleReadPermissions(target, idList, clearPermissions = true) {
+  _toggleReadPermissions(target, idList) {
     let added = Immutable.Set.of();
     let deleted = Immutable.Set.of();
 
     idList.forEach((id) => {
-      const readTarget = `${target}:read:${id}`;
-      const editTarget = `${target}:edit:${id}`;
+      const readTarget = target + ':read:' + id;
+      const editTarget = target + ':edit:' + id;
 
-      if (this.props.permissions.contains(readTarget) && clearPermissions) {
+      if (this.props.permissions.contains(readTarget)) {
         deleted = deleted.add(readTarget).add(editTarget);
       } else {
         added = added.add(readTarget);
@@ -157,15 +141,15 @@ const PermissionSelector = React.createClass({
     }, this);
     this.props.onChange(added, deleted);
   },
-  _toggleEditPermissions(target, idList, clearPermissions = true) {
+  _toggleEditPermissions(target, idList) {
     let added = Immutable.Set.of();
     let deleted = Immutable.Set.of();
 
     idList.forEach((id) => {
-      const readTarget = `${target}:read:${id}`;
-      const editTarget = `${target}:edit:${id}`;
+      const readTarget = target + ':read:' + id;
+      const editTarget = target + ':edit:' + id;
 
-      if (this.props.permissions.contains(editTarget) && clearPermissions) {
+      if (this.props.permissions.contains(editTarget)) {
         deleted = deleted.add(editTarget);
       } else {
         added = added.add(readTarget).add(editTarget);

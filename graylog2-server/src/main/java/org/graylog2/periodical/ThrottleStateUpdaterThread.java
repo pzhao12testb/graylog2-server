@@ -20,6 +20,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
 import com.github.joschi.jadconfig.util.Size;
+import com.google.common.eventbus.EventBus;
 import org.graylog2.notifications.Notification;
 import org.graylog2.notifications.NotificationService;
 import org.graylog2.plugin.GlobalMetricNames;
@@ -54,6 +55,7 @@ public class ThrottleStateUpdaterThread extends Periodical {
     private static final Logger log = LoggerFactory.getLogger(ThrottleStateUpdaterThread.class);
     private final KafkaJournal journal;
     private final ProcessBuffer processBuffer;
+    private final EventBus eventBus;
     private final Size retentionSize;
     private final NotificationService notificationService;
     private final ServerStatus serverStatus;
@@ -67,11 +69,13 @@ public class ThrottleStateUpdaterThread extends Periodical {
     @Inject
     public ThrottleStateUpdaterThread(final Journal journal,
                                       ProcessBuffer processBuffer,
+                                      EventBus eventBus,
                                       NotificationService notificationService,
                                       ServerStatus serverStatus,
                                       MetricRegistry metricRegistry,
                                       @Named("message_journal_max_size") Size retentionSize) {
         this.processBuffer = processBuffer;
+        this.eventBus = eventBus;
         this.retentionSize = retentionSize;
         this.notificationService = notificationService;
         this.serverStatus = serverStatus;

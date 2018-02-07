@@ -16,7 +16,8 @@
  */
 package org.graylog2.indexer.retention.strategies;
 
-import org.graylog2.indexer.IndexSet;
+import org.graylog2.auditlog.AuditLogger;
+import org.graylog2.indexer.Deflector;
 import org.graylog2.indexer.indices.Indices;
 import org.graylog2.plugin.indexer.retention.RetentionStrategyConfig;
 import org.graylog2.shared.system.activities.ActivityWriter;
@@ -30,17 +31,18 @@ public class NoopRetentionStrategy extends AbstractIndexCountBasedRetentionStrat
     private static final Logger LOG = LoggerFactory.getLogger(NoopRetentionStrategy.class);
 
     @Inject
-    public NoopRetentionStrategy(Indices indices, ActivityWriter activityWriter) {
-        super(indices, activityWriter);
+    public NoopRetentionStrategy(Deflector deflector, Indices indices, ActivityWriter activityWriter,
+                                 AuditLogger auditLogger) {
+        super(deflector, indices, activityWriter, auditLogger);
     }
 
     @Override
-    protected Optional<Integer> getMaxNumberOfIndices(IndexSet indexSet) {
+    protected Optional<Integer> getMaxNumberOfIndices() {
         return Optional.of(Integer.MAX_VALUE);
     }
 
     @Override
-    protected void retain(String indexName, IndexSet indexSet) {
+    protected void retain(String indexName) {
         LOG.info("Not running any index retention. This is the no-op index rotation strategy.");
     }
 

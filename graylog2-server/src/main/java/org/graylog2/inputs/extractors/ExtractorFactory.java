@@ -19,7 +19,6 @@ package org.graylog2.inputs.extractors;
 import com.codahale.metrics.MetricRegistry;
 import org.graylog2.ConfigurationException;
 import org.graylog2.grok.GrokPatternService;
-import org.graylog2.lookup.LookupTableService;
 import org.graylog2.plugin.inputs.Converter;
 import org.graylog2.plugin.inputs.Extractor;
 
@@ -30,13 +29,11 @@ import java.util.Map;
 public class ExtractorFactory {
     private final MetricRegistry metricRegistry;
     private final GrokPatternService grokPatternService;
-    private final LookupTableService lookupTableService;
 
     @Inject
-    public ExtractorFactory(MetricRegistry metricRegistry, GrokPatternService grokPatternService, LookupTableService lookupTableService) {
+    public ExtractorFactory(MetricRegistry metricRegistry, GrokPatternService grokPatternService) {
         this.metricRegistry = metricRegistry;
         this.grokPatternService = grokPatternService;
-        this.lookupTableService = lookupTableService;
     }
 
     public Extractor factory(String id,
@@ -68,8 +65,6 @@ public class ExtractorFactory {
                 return new GrokExtractor(metricRegistry, grokPatternService.loadAll(), id, title, order, cursorStrategy, sourceField, targetField, extractorConfig, creatorUserId, converters, conditionType, conditionValue);
             case JSON:
                 return new JsonExtractor(metricRegistry, id, title, order, cursorStrategy, sourceField, targetField, extractorConfig, creatorUserId, converters, conditionType, conditionValue);
-            case LOOKUP_TABLE:
-                return new LookupTableExtractor(metricRegistry, lookupTableService, id, title, order, cursorStrategy, sourceField, targetField, extractorConfig, creatorUserId, converters, conditionType, conditionValue);
             default:
                 throw new NoSuchExtractorException();
         }

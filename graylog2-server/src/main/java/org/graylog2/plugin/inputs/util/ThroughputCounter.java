@@ -17,55 +17,54 @@
 package org.graylog2.plugin.inputs.util;
 
 import com.codahale.metrics.Gauge;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.EventLoopGroup;
-import io.netty.handler.traffic.GlobalTrafficShapingHandler;
-import io.netty.handler.traffic.TrafficCounter;
+import com.google.common.collect.Maps;
+import org.jboss.netty.handler.traffic.GlobalTrafficShapingHandler;
+import org.jboss.netty.handler.traffic.TrafficCounter;
+import org.jboss.netty.util.HashedWheelTimer;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Dedicated scheduled executor
-@ChannelHandler.Sharable
+/**
+ * @author Lennart Koopmann <lennart@torch.sh>
+ */
 public class ThroughputCounter extends GlobalTrafficShapingHandler {
-    public static final String READ_BYTES_1_SEC = "read_bytes_1sec";
-    public static final String WRITTEN_BYTES_1_SEC = "written_bytes_1sec";
-    public static final String READ_BYTES_TOTAL = "read_bytes_total";
-    public static final String WRITTEN_BYTES_TOTAL = "written_bytes_total";
 
     @Inject
-    public ThroughputCounter(EventLoopGroup executor) {
-        super(executor, 1000);
+    public ThroughputCounter(HashedWheelTimer wheelTimer) {
+        super(wheelTimer, 1000);
     }
 
     public Map<String, Gauge<Long>> gauges() {
-        Map<String, Gauge<Long>> gauges = new HashMap<>();
+        Map<String, Gauge<Long>> gauges = Maps.newHashMap();
 
-        final TrafficCounter tc = trafficCounter();
+        final TrafficCounter tc = this.getTrafficCounter();
 
-        gauges.put(READ_BYTES_1_SEC, new Gauge<Long>() {
+        gauges.put("read_bytes_1sec", new Gauge<Long>() {
             @Override
             public Long getValue() {
-                return tc.lastReadBytes();
+                return tc.getLastReadBytes();
             }
         });
-        gauges.put(WRITTEN_BYTES_1_SEC, new Gauge<Long>() {
+
+        gauges.put("written_bytes_1sec", new Gauge<Long>() {
             @Override
             public Long getValue() {
-                return tc.lastWrittenBytes();
+                return tc.getLastWrittenBytes();
             }
         });
-        gauges.put(READ_BYTES_TOTAL, new Gauge<Long>() {
+
+        gauges.put("read_bytes_total", new Gauge<Long>() {
             @Override
             public Long getValue() {
-                return tc.cumulativeReadBytes();
+                return tc.getCumulativeReadBytes();
             }
         });
-        gauges.put(WRITTEN_BYTES_TOTAL, new Gauge<Long>() {
+
+        gauges.put("written_bytes_total", new Gauge<Long>() {
             @Override
             public Long getValue() {
-                return tc.cumulativeWrittenBytes();
+                return tc.getCumulativeWrittenBytes();
             }
         });
 

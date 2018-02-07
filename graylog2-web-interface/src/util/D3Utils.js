@@ -8,8 +8,7 @@ const D3Utils = {
 
   // Add a data element to the given D3 selection to show a bootstrap tooltip
   tooltipRenderlet(graph, selector, callback) {
-    // Use unique name in "renderlet.<name>" here to avoid being overwritten by another renderlet callback
-    graph.on('renderlet.tooltip', (chart) => {
+    graph.on('renderlet', (chart) => {
       d3.select(chart.root()[0][0]).selectAll(selector)
         .attr('rel', 'tooltip')
         .attr('data-original-title', callback);

@@ -1,72 +1,63 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import Reflux from 'reflux';
-import Immutable from 'immutable';
-import { Button } from 'react-bootstrap';
+'use strict';
 
-import StoreProvider from 'injection/StoreProvider';
+var React = require('react');
+var Immutable = require('immutable');
 
-import PermissionsMixin from 'util/PermissionsMixin';
-const CurrentUserStore = StoreProvider.getStore('CurrentUser');
+var Button = require('react-bootstrap').Button;
 
-import { DataTable } from 'components/common';
+var DataTable = require('../common/DataTable');
+var PermissionsMixin = require('../../util/PermissionsMixin');
 
-const RoleList = React.createClass({
-  mixins: [Reflux.connect(CurrentUserStore), PermissionsMixin],
-  propTypes: {
-    roles: PropTypes.instanceOf(Immutable.Set).isRequired,
-    showEditRole: PropTypes.func.isRequired,
-    deleteRole: PropTypes.func.isRequired,
-  },
+var RoleList = React.createClass({
+    mixins: [PermissionsMixin],
 
-  _headerCellFormatter(header) {
-    const className = (header === 'Actions' ? 'actions' : '');
-    return <th className={className}>{header}</th>;
-  },
-  _editButton(role) {
-    if (this.isPermitted(this.state.currentUser.permissions, ['roles:edit:' + role.name]) === false || role.read_only) {
-        return null;
+    propTypes: {
+        roles: React.PropTypes.instanceOf(Immutable.Set).isRequired,
+        showEditRole: React.PropTypes.func.isRequired,
+        deleteRole: React.PropTypes.func.isRequired,
+    },
+
+    _headerCellFormatter(header) {
+        const className = (header === 'Actions' ? 'actions' : '');
+        return <th className={className}>{header}</th>;
+    },
+    _roleInfoFormatter(role) {
+
+        let actions = [
+            <button key="delete" className="btn btn-primary btn-xs" onClick={() => this.props.deleteRole(role)} title="Delete role">Delete</button>,
+            <span key="space">&nbsp;</span>,
+            <button key="edit" className="btn btn-info btn-xs" onClick={() => this.props.showEditRole(role)} title="Edit role">Edit</button>
+        ];
+
+        return (
+            <tr key={role.name}>
+                <td>{role.name}</td>
+                <td className="limited">{role.description}</td>
+                <td>
+                    {role.read_only ? null : actions}
+                </td>
+            </tr>
+        );
+    },
+    render() {
+        var filterKeys = ["name", "description"];
+        var headers = ["Name", "Description", "Actions"];
+
+        return (
+            <div>
+                <DataTable id="role-list"
+                           className="table-hover"
+                           headers={headers}
+                           headerCellFormatter={this._headerCellFormatter}
+                           sortByKey={"name"}
+                           rows={this.props.roles.toJS()}
+                           filterBy="Name"
+                           dataRowFormatter={this._roleInfoFormatter}
+                           filterLabel="Filter Roles"
+                           filterKeys={filterKeys}/>
+            </div>
+        );
     }
-    return (<Button key="edit" bsSize="xsmall" bsStyle="info" onClick={() => this.props.showEditRole(role)} title="Edit role">Edit</Button>);
-  },
-  _deleteButton(role) {
-    if (this.isPermitted(this.state.currentUser.permissions, ['roles:delete:' + role.name]) === false || role.read_only) {
-        return null;
-    }
-    return (<Button key="delete" bsSize="xsmall" bsStyle="primary" onClick={() => this.props.deleteRole(role)} title="Delete role">Delete</Button>);
-  },
-  _roleInfoFormatter(role) {
-    return (
-      <tr key={role.name}>
-        <td>{role.name}</td>
-        <td className="limited">{role.description}</td>
-        <td>
-          {this._editButton(role)}
-          <span key="space">&nbsp;</span>
-          {this._deleteButton(role)}
-        </td>
-      </tr>
-    );
-  },
-  render() {
-    const filterKeys = ['name', 'description'];
-    const headers = ['Name', 'Description', 'Actions'];
-
-    return (
-      <div>
-        <DataTable id="role-list"
-                   className="table-hover"
-                   headers={headers}
-                   headerCellFormatter={this._headerCellFormatter}
-                   sortByKey={'name'}
-                   rows={this.props.roles.toJS()}
-                   filterBy="Name"
-                   dataRowFormatter={this._roleInfoFormatter}
-                   filterLabel="Filter Roles"
-                   filterKeys={filterKeys} />
-      </div>
-    );
-  },
 });
 
-export default RoleList;
+module.exports = RoleList;

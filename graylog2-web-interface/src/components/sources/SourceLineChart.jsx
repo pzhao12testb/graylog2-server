@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import $ from 'jquery';
 import {} from 'jquery-ui/ui/effects/effect-bounce';
@@ -13,10 +12,10 @@ import graphHelper from 'legacy/graphHelper';
 
 const SourceLineChart = React.createClass({
   propTypes: {
-    histogramDataAvailable: PropTypes.bool.isRequired,
-    reloadingHistogram: PropTypes.bool.isRequired,
-    resetFilters: PropTypes.func.isRequired,
-    resolution: PropTypes.string.isRequired,
+    histogramDataAvailable: React.PropTypes.bool.isRequired,
+    reloadingHistogram: React.PropTypes.bool.isRequired,
+    resetFilters: React.PropTypes.func.isRequired,
+    resolution: React.PropTypes.string.isRequired,
   },
 
   getInitialState() {
@@ -96,7 +95,7 @@ const SourceLineChart = React.createClass({
     };
     const loadingSpinner = (
       <div className="sources overlay" style={loadingSpinnerStyle}>
-        <i className="fa fa-spin fa-refresh spinner" />
+        <i className="fa fa-spin fa-refresh spinner"/>
       </div>
     );
 

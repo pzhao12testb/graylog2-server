@@ -18,6 +18,7 @@ package org.graylog2.shared.system.stats.fs;
 
 import com.google.common.collect.ImmutableSet;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;

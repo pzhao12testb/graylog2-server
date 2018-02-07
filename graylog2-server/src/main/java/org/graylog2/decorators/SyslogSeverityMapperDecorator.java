@@ -97,7 +97,6 @@ public class SyslogSeverityMapperDecorator implements SearchResponseDecorator {
         this.targetField = (String) requireNonNull(decorator.config().get(CK_TARGET_FIELD), CK_TARGET_FIELD + " cannot be null");
     }
 
-    @Override
     public SearchResponse apply(SearchResponse searchResponse) {
         final List<ResultMessageSummary> summaries = searchResponse.messages().stream()
                 .map(summary -> {

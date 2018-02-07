@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import Immutable from 'immutable';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
@@ -32,8 +31,8 @@ const FieldGraphs = React.createClass({
     this.initialFieldGraphs = this.state.fieldGraphs;
     this.notifyOnNewGraphs = true;
 
-    FieldGraphsStore.onFieldGraphsUpdated = newFieldGraphs => this.setState({ fieldGraphs: Immutable.fromJS(newFieldGraphs.toJS()) });
-    FieldGraphsStore.onFieldGraphsMerged = newStackedGraphs => this.setState({ stackedGraphs: Immutable.fromJS(newStackedGraphs.toJS()) });
+    FieldGraphsStore.onFieldGraphsUpdated = (newFieldGraphs) => this.setState({fieldGraphs: Immutable.fromJS(newFieldGraphs.toJS())});
+    FieldGraphsStore.onFieldGraphsMerged = (newStackedGraphs) => this.setState({stackedGraphs: Immutable.fromJS(newStackedGraphs.toJS())});
     FieldGraphsStore.onFieldGraphCreated = (graphId) => {
       if (this.notifyOnNewGraphs && !this.initialFieldGraphs.has(graphId)) {
         const element = ReactDOM.findDOMNode(this.refs[graphId]);
@@ -46,7 +45,7 @@ const FieldGraphs = React.createClass({
   },
   addField(field) {
     const streamId = this.props.stream ? this.props.stream.id : undefined;
-    FieldGraphsStore.newFieldGraph(field, { interval: this.props.resolution, streamid: streamId });
+    FieldGraphsStore.newFieldGraph(field, {interval: this.props.resolution, streamid: streamId});
   },
   deleteFieldGraph(graphId) {
     FieldGraphsStore.deleteGraph(graphId);
@@ -55,7 +54,7 @@ const FieldGraphs = React.createClass({
     const fieldGraphs = this.state.fieldGraphs
       .sortBy(graph => graph.createdAt)
       .map((graphOptions, graphId) =>
-        <LegacyFieldGraph key={graphId}
+          <LegacyFieldGraph key={graphId}
                             ref={graphId}
                             graphId={graphId}
                             graphOptions={graphOptions.toJS()}
@@ -64,7 +63,7 @@ const FieldGraphs = React.createClass({
                             to={this.props.to}
                             permissions={this.props.permissions}
                             stacked={this.state.stackedGraphs.has(graphId)}
-                            hidden={this.state.stackedGraphs.some(stackedGraphs => stackedGraphs.has(graphId))} />,
+                            hidden={this.state.stackedGraphs.some((stackedGraphs) => stackedGraphs.has(graphId))}/>
       );
 
     return (

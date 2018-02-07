@@ -1,13 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import MultiSelect from 'components/common/MultiSelect';
 
 const RolesSelect = React.createClass({
   propTypes: {
-    userRoles: PropTypes.arrayOf(PropTypes.string),
-    availableRoles: PropTypes.array.isRequired,
-    onValueChange: PropTypes.func,
+    userRoles: React.PropTypes.arrayOf(React.PropTypes.string),
+    availableRoles: React.PropTypes.array.isRequired,
   },
   getDefaultProps() {
     return {
@@ -27,7 +25,6 @@ const RolesSelect = React.createClass({
         ref="select"
         options={rolesOptions}
         value={rolesValue}
-        onChange={this.props.onValueChange}
         placeholder="Choose roles..."
       />
     );

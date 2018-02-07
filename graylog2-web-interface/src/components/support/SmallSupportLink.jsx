@@ -1,9 +1,8 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 const SmallSupportLink = React.createClass({
   propTypes: {
-    children: PropTypes.node.isRequired,
+    children: React.PropTypes.node.isRequired,
   },
   render() {
     return (

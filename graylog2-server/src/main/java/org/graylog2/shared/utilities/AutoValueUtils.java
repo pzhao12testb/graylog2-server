@@ -33,9 +33,11 @@ public final class AutoValueUtils {
      * @see com.google.auto.value.AutoValue
      */
     public static String getCanonicalName(final Class<?> aClass) {
-        Class<?> cls = aClass;
-        while (cls.getSimpleName().matches("^\\$*AutoValue_.*")) {
-            cls = cls.getSuperclass();
+        final Class<?> cls;
+        if (aClass.getSimpleName().startsWith("AutoValue_")) {
+            cls = aClass.getSuperclass();
+        } else {
+            cls = aClass;
         }
 
         return cls.getCanonicalName();

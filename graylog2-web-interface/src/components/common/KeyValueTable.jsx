@@ -1,12 +1,7 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { Button } from 'react-bootstrap';
+import React, {PropTypes} from 'react';
+import { Button, Input } from 'react-bootstrap';
 
-import { Input } from 'components/bootstrap';
 import ObjectUtils from 'util/ObjectUtils';
-
-// eslint-disable-next-line no-unused-vars
-import style from './KeyValueTable.css';
 
 /**
  * KeyValueTable displays a table for all key-value pairs in a JS object. If the editable prop is set to true, it also
@@ -14,20 +9,13 @@ import style from './KeyValueTable.css';
  */
 const KeyValueTable = React.createClass({
   propTypes: {
-    /** Object containing key-values to represent in the table. */
-    pairs: PropTypes.object.isRequired,
-    /** Table headers. Must be an array with three elements [ key header, value header, actions header]. */
-    headers: PropTypes.array,
-    /** Indicates if the user can create, edit or delete key-value pairs. */
-    editable: PropTypes.bool,
-    /** Callback when key-value pairs change. It receives the new key-value pairs as argument. */
-    onChange: PropTypes.func,
-    /** Extra CSS classes for the rendered table. */
-    className: PropTypes.string,
-    /** Extra CSS classes for the table container. */
-    containerClassName: PropTypes.string,
-    /** Size of action buttons. */
-    actionsSize: PropTypes.oneOf(['large', 'medium', 'small', 'xsmall']),
+    pairs: PropTypes.object.isRequired, // Object containing key-values to represent in the table
+    headers: PropTypes.array, // Table headers. Must be an array with three elements [ key header, value header, actions header]
+    editable: PropTypes.bool, // Indicates if the user can create, edit or delete key-value pairs
+    onChange: PropTypes.func, // Callback when key-value pairs change
+    className: PropTypes.string, // Extra CSS classes for the rendered table
+    containerClassName: PropTypes.string, // Extra CSS classes for the table container
+    actionsSize: PropTypes.oneOf(['large', 'medium', 'small', 'xsmall']), // Size of action buttons
   },
 
   getInitialState() {
@@ -64,7 +52,7 @@ const KeyValueTable = React.createClass({
     newPairs[this.state.newKey] = this.state.newValue;
     this._onPairsChange(newPairs);
 
-    this.setState({ newKey: '', newValue: '' });
+    this.setState({newKey: '', newValue: ''});
   },
 
   _deleteRow(key) {
@@ -99,14 +87,14 @@ const KeyValueTable = React.createClass({
   },
 
   _formattedRows(pairs) {
-    return Object.keys(pairs).sort().map((key) => {
+    return Object.keys(pairs).sort().map(key => {
       let actionsColumn;
       if (this.props.editable) {
         const actions = [];
         actions.push(
           <Button key={`delete-${key}`} bsStyle="danger" bsSize={this.props.actionsSize} onClick={this._deleteRow(key)}>
             Delete
-          </Button>,
+          </Button>
         );
 
         actionsColumn = <td>{actions}</td>;
@@ -132,11 +120,11 @@ const KeyValueTable = React.createClass({
       <tr>
         <td>
           <Input type="text" name="newKey" id="newKey" bsSize="small" placeholder={this.props.headers[0]} value={this.state.newKey}
-                 onChange={this._bindValue} />
+                 onChange={this._bindValue}/>
         </td>
         <td>
           <Input type="text" name="newValue" id="newValue" bsSize="small" placeholder={this.props.headers[1]}
-                 value={this.state.newValue} onChange={this._bindValue} />
+                 value={this.state.newValue} onChange={this._bindValue}/>
         </td>
         <td>
           <Button bsStyle="success" bsSize="small" onClick={this._addRow} disabled={addRowDisabled}>Add</Button>
@@ -147,13 +135,13 @@ const KeyValueTable = React.createClass({
 
   render() {
     return (
-      <div className="key-value-table-component">
+      <div>
         <div className={`table-responsive ${this.props.containerClassName}`}>
           <table className={`table table-striped ${this.props.className}`}>
             <thead>{this._formattedHeaders(this.props.headers)}</thead>
             <tbody>
-              {this._formattedRows(this.props.pairs)}
-              {this._newRow()}
+            {this._formattedRows(this.props.pairs)}
+            {this._newRow()}
             </tbody>
           </table>
         </div>

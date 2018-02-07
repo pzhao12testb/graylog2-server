@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { LinkContainer } from 'react-router-bootstrap';
-import { Button, OverlayTrigger, Popover, Tooltip } from 'react-bootstrap';
+import { Button, Label, OverlayTrigger, Popover, Tooltip } from 'react-bootstrap';
 
 import PermissionsMixin from 'util/PermissionsMixin';
 import Routes from 'routing/Routes';
@@ -16,8 +15,8 @@ import UserListStyle from '!style!css!./UserList.css';
 
 const UserList = React.createClass({
   propTypes: {
-    currentUsername: PropTypes.string.isRequired,
-    currentUser: PropTypes.object.isRequired,
+    currentUsername: React.PropTypes.string.isRequired,
+    currentUser: React.PropTypes.object.isRequired,
   },
 
   mixins: [PermissionsMixin],
@@ -30,7 +29,7 @@ const UserList = React.createClass({
   },
   componentDidMount() {
     this.loadUsers();
-    RolesStore.loadRoles().done((roles) => {
+    RolesStore.loadRoles().done(roles => {
       this.setState({ roles: roles.map(role => role.name) });
     });
   },
@@ -67,21 +66,6 @@ const UserList = React.createClass({
       case '':
         formattedHeaderCell = <th className="user-type">{header}</th>;
         break;
-      case 'client address': {
-        const popover = (<Popover id="decorators-help" className={UserListStyle.sessionBadgeDetails}>
-          <p className="description">
-            The address of the client used to initially establish the session, not necessarily its current address.
-          </p>
-        </Popover>);
-
-        formattedHeaderCell = (<th>
-          {header}
-          <OverlayTrigger trigger="click" rootClose placement="top" overlay={popover}>
-            <Button bsStyle="link" className={UserListStyle.helpHeaderRow}><i className="fa fa-fw fa-question-circle" /></Button>
-          </OverlayTrigger>
-        </th>);
-        break;
-      }
       case 'actions':
         formattedHeaderCell = <th className="actions">{header}</th>;
         break;
@@ -102,11 +86,11 @@ const UserList = React.createClass({
         </Popover>
       );
       userBadge = (<OverlayTrigger trigger={['hover', 'focus']} placement="left" overlay={popover} rootClose>
-        <i className={`fa fa-circle ${UserListStyle.activeSession}`} />
+        <i className={`fa fa-circle ${UserListStyle.activeSession}`}/>
       </OverlayTrigger>);
     }
 
-    const roleBadges = user.roles.map(role => <span key={role} className={`${UserListStyle.roleBadgeFixes} label label-${role === 'Admin' ? 'info' : 'default'}`}>{role}</span>);
+    const roleBadges = user.roles.map((role) => <span key={role} className={`${UserListStyle.roleBadgeFixes} label label-${role === 'Admin' ? 'info' : 'default'}`} >{role}</span>);
 
     let actions = null;
     if (user.read_only) {
@@ -120,15 +104,15 @@ const UserList = React.createClass({
       );
     } else {
       const deleteAction = (
-        <Button id={`delete-user-${user.username}`} bsStyle="primary" bsSize="xs" title="Delete user"
+        <Button id="delete-user" bsStyle="primary" bsSize="xs" title="Delete user"
                 onClick={this._deleteUserFunction(user.username)}>
           Delete
         </Button>
       );
 
       const editAction = (
-        <LinkContainer to={Routes.SYSTEM.AUTHENTICATION.USERS.edit(encodeURIComponent(user.username))}>
-          <Button id={`edit-user-${user.username}`} bsStyle="info" bsSize="xs" title={`Edit user ${user.username}`}>
+        <LinkContainer to={Routes.SYSTEM.AUTHENTICATION.USERS.edit(user.username)}>
+          <Button bsStyle="info" bsSize="xs" title={`Edit user ${user.username}`}>
             Edit
           </Button>
         </LinkContainer>
@@ -166,13 +150,13 @@ const UserList = React.createClass({
                      className="table-hover"
                      headers={headers}
                      headerCellFormatter={this._headerCellFormatter}
-                     sortByKey={'full_name'}
+                     sortByKey={"full_name"}
                      rows={this.state.users}
                      filterBy="role"
                      filterSuggestions={this.state.roles}
                      dataRowFormatter={this._userInfoFormatter}
                      filterLabel="Filter Users"
-                     filterKeys={filterKeys} />
+                     filterKeys={filterKeys}/>
         </div>
       );
     }
